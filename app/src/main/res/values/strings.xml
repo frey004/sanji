@@ -21,4 +21,7 @@
     <string name="uma_opacity_label">Opacidad del fondo de los subtítulos: %1$d %%</string>
     <string name="uma_start">Iniciar modo Uma Musume</string>
     <string name="screen_section">Traducción en vivo de la pantalla</string>
+    <string name="update_section">Actualizaciones</string>
+    <string name="update_version">Versión instalada: %1$s</string>
+    <string name="update_check">Buscar actualizaciones</string>
 </resources>

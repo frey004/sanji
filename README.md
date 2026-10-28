@@ -56,6 +56,23 @@ Los cambios de opacidad se aplican al momento, sin reiniciar la burbuja.
 El reconocimiento de texto y la traducción funcionan en el propio móvil con
 Google ML Kit. Solo hace falta internet la primera vez para descargar cada idioma (~30 MB).
 
+## Actualizaciones
+
+Al abrir la app se comprueba si hay una versión nueva publicada en GitHub y,
+si la hay, se ofrece descargarla e instalarla. También puedes usar el botón
+**Buscar actualizaciones** al final de la pantalla principal. La primera vez,
+Android pide permitir «Instalar apps desconocidas» para esta app.
+
+Para que una versión se pueda instalar encima de la anterior, todas tienen que
+ir firmadas con la misma clave. GitHub Actions la lee de dos secretos del
+repositorio (*Settings → Secrets and variables → Actions*):
+
+- `SIGNING_KEYSTORE_BASE64`: el archivo `.keystore` (alias `traductor`) en base64.
+- `SIGNING_PASSWORD`: su contraseña.
+
+Sin esos secretos el APK se compila igual, pero con una clave temporal distinta
+en cada compilación, y Android no dejará instalarlo como actualización.
+
 ## Compilar
 
 GitHub Actions compila y publica el APK en cada push

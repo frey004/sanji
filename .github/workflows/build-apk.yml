@@ -20,7 +20,21 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Preparar clave de firma
+        env:
+          SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$SIGNING_KEYSTORE_BASE64" ]; then
+            echo "$SIGNING_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            echo "SIGNING_KEYSTORE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Falta el secreto SIGNING_KEYSTORE_BASE64: el APK se firma con una clave temporal y no se podrá actualizar desde la app."
+          fi
+
       - name: Compilar
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon --stacktrace

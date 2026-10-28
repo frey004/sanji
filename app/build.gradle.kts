@@ -11,19 +11,39 @@ android {
         applicationId = "com.frey.traductorpantalla"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        // GitHub Actions pasa el número de compilación: así cada APK publicado
+        // tiene una versión mayor que el anterior y la app sabe si hay otra nueva.
+        versionCode = (System.getenv("VERSION_CODE") ?: "1").toInt()
+        versionName = "1.0.$versionCode"
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
+    }
+
+    // Clave fija: Android solo acepta una actualización si va firmada con la
+    // misma clave que la versión instalada. En GitHub Actions sale de los
+    // secretos del repositorio; sin ella se usa la clave de depuración.
+    val keystore = System.getenv("SIGNING_KEYSTORE")
+    signingConfigs {
+        if (keystore != null) {
+            create("release") {
+                storeFile = file(keystore)
+                storePassword = System.getenv("SIGNING_PASSWORD")
+                keyAlias = "traductor"
+                keyPassword = System.getenv("SIGNING_PASSWORD")
+            }
         }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            // Firma con la clave de depuración para que el APK sea instalable.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     compileOptions {
