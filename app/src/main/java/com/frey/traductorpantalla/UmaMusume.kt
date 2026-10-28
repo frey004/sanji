@@ -7,28 +7,13 @@ import com.google.mlkit.nl.translate.TranslateLanguage
 
 /** Ajustes y filtros del modo dedicado a Uma Musume. */
 object UmaMusume {
-    val versions = listOf(
-        Language("Japonés (versión japonesa)", TranslateLanguage.JAPANESE, Script.JAPANESE),
-        Language("Inglés (versión global)", TranslateLanguage.ENGLISH),
-    )
+    /** El juego se usa en su versión japonesa. */
+    val source = Language("Japonés", TranslateLanguage.JAPANESE, Script.JAPANESE)
 
-    /** Versión japonesa y versión global del juego. */
-    private val packages = listOf("jp.co.cygames.umamusume", "com.cygames.umamusume")
+    private const val PACKAGE = "jp.co.cygames.umamusume"
 
     private const val PREFS = "uma_musume"
     const val DEFAULT_OPACITY = 75
-
-    fun source(context: Context): Language {
-        val code = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getString("version", TranslateLanguage.JAPANESE)
-        return versions.firstOrNull { it.code == code } ?: versions[0]
-    }
-
-    fun saveSource(context: Context, source: Language) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putString("version", source.code)
-            .apply()
-    }
 
     /** Opacidad del fondo de los subtítulos, de 0 (transparente) a 100. */
     fun opacity(context: Context): Int =
@@ -40,8 +25,7 @@ object UmaMusume {
             .apply()
     }
 
-    fun launchIntent(context: Context): Intent? =
-        packages.firstNotNullOfOrNull { context.packageManager.getLaunchIntentForPackage(it) }
+    fun launchIntent(context: Context): Intent? = context.packageManager.getLaunchIntentForPackage(PACKAGE)
 
     /**
      * Deja pasar diálogos, opciones y menús, y descarta lo demás: estadísticas,

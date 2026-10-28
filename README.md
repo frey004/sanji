@@ -27,9 +27,9 @@ También puedes **compartir** un enlace desde Chrome u otra app y elegir
 
 ### Modo Uma Musume
 
-Sección dedicada al juego **Uma Musume Pretty Derby**:
+Sección dedicada al juego **Uma Musume Pretty Derby** (versión japonesa):
 
-1. Elige la versión del juego (japonesa o global en inglés) y el idioma al que traducir.
+1. Elige en «Traducir a» el idioma al que traducir.
 2. Ajusta la **opacidad del fondo de los subtítulos**: son claros y translúcidos,
    a juego con los cuadros del juego, en lugar de recuadros negros.
 3. Pulsa **Iniciar modo Uma Musume**. Si el juego está instalado, se abre solo.
@@ -39,7 +39,7 @@ Sección dedicada al juego **Uma Musume Pretty Derby**:
    - Espera a que cada diálogo termine de escribirse antes de traducirlo.
    - Tocar la burbuja fuerza una traducción; mantenerla pulsada pausa/reanuda el tiempo real.
 
-Los cambios de opacidad o versión se aplican al momento, sin reiniciar la burbuja.
+Los cambios de opacidad se aplican al momento, sin reiniciar la burbuja.
 
 ### Traducción en vivo de la pantalla
 

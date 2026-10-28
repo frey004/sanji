@@ -10,7 +10,6 @@
     <!-- Para abrir Uma Musume directamente al iniciar su modo. -->
     <queries>
         <package android:name="jp.co.cygames.umamusume" />
-        <package android:name="com.cygames.umamusume" />
     </queries>
 
     <application

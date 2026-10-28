@@ -171,7 +171,7 @@ class TranslatorService : Service() {
     private fun loadLanguages() {
         recognizer?.close()
         translator?.close()
-        source = if (gameMode) UmaMusume.source(this) else Languages.source(this)
+        source = if (gameMode) UmaMusume.source else Languages.source(this)
         recognizer = Languages.recognizer(source)
         translator = Languages.translator(source, Languages.target(this))
         modelReady = false

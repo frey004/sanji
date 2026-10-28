@@ -30,7 +30,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var targetSpinner: Spinner
     private lateinit var startButton: Button
     private lateinit var statusText: TextView
-    private lateinit var umaVersionSpinner: Spinner
     private var askedNotifications = false
     /** Si el último botón pulsado fue el del modo Uma Musume. */
     private var startingGame = false
@@ -91,21 +90,6 @@ class MainActivity : ComponentActivity() {
         urlInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO) openWeb()
             actionId == EditorInfo.IME_ACTION_GO
-        }
-
-        umaVersionSpinner = findViewById(R.id.umaVersionSpinner)
-        umaVersionSpinner.adapter = ArrayAdapter(
-            this, android.R.layout.simple_spinner_dropdown_item, UmaMusume.versions.map { it.name },
-        )
-        umaVersionSpinner.setSelection(UmaMusume.versions.indexOf(UmaMusume.source(this)))
-        umaVersionSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val version = UmaMusume.versions[position]
-                if (version == UmaMusume.source(this@MainActivity)) return
-                UmaMusume.saveSource(this@MainActivity, version)
-                refreshRunningService()
-            }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
         val opacityLabel = findViewById<TextView>(R.id.umaOpacityLabel)
@@ -200,7 +184,7 @@ class MainActivity : ComponentActivity() {
 
         setStartButtonsEnabled(false)
         lifecycleScope.launch {
-            val source = if (game) UmaMusume.source(this@MainActivity) else selectedSource()
+            val source = if (game) UmaMusume.source else selectedSource()
             val translator = Languages.translator(source, selectedTarget())
             if (translator != null) {
                 statusText.text = "Descargando el idioma (solo la primera vez)…"

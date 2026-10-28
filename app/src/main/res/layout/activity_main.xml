@@ -90,18 +90,6 @@
             android:textSize="14sp" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/uma_version_label"
-            android:textStyle="bold" />
-
-        <Spinner
-            android:id="@+id/umaVersionSpinner"
-            android:layout_width="match_parent"
-            android:layout_height="48dp" />
-
-        <TextView
             android:id="@+id/umaOpacityLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
