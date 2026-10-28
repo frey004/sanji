@@ -24,6 +24,20 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".WebTranslateActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize"
+            android:exported="true"
+            android:label="@string/web_title"
+            android:windowSoftInputMode="adjustResize">
+            <!-- Compartir un enlace desde el navegador u otra app abre la traducción. -->
+            <intent-filter android:label="@string/web_share_label">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
         <service
             android:name=".TranslatorService"
             android:exported="false"

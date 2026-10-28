@@ -1,6 +1,6 @@
 # Traductor de Pantalla (Android)
 
-App Android que traduce en tiempo real el texto de **cualquier app, juego, manga o vídeo**,
+App Android que traduce **páginas web a partir de su enlace** y, además, traduce en tiempo real el texto de **cualquier app, juego, manga o vídeo**,
 dibujando la traducción encima del texto original (estilo Google Lens).
 
 ## Descargar
@@ -11,6 +11,21 @@ Instálalo en el móvil; si Android lo pide, permite «Instalar apps desconocida
 Requiere Android 8.0 o superior.
 
 ## Uso
+
+### Traducir una página web
+
+1. Elige el idioma de la página y el idioma al que traducir.
+2. Pega el enlace en **Traducir una página web** y pulsa **Abrir y traducir**
+   (si escribes algo que no es un enlace, se busca en Google).
+3. La página se abre dentro de la app ya traducida. Puedes seguir navegando por
+   sus enlaces: cada página nueva, y el contenido que se carga al hacer scroll,
+   se traduce sola.
+4. **Ver original / Ver traducción** cambia entre el texto original y el traducido.
+
+También puedes **compartir** un enlace desde Chrome u otra app y elegir
+«Traducir página».
+
+### Traducción en vivo de la pantalla
 
 1. Elige el idioma del texto (inglés, japonés, chino, coreano…) y el idioma al que traducir.
 2. Pulsa **Iniciar burbuja** y acepta los permisos:

@@ -11,7 +11,9 @@ import android.provider.Settings
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.view.inputmethod.EditorInfo
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -60,6 +62,21 @@ class MainActivity : ComponentActivity() {
 
         setupSpinner(sourceSpinner, Languages.sources, Languages.source(this))
         setupSpinner(targetSpinner, Languages.targets, Languages.target(this))
+
+        val urlInput = findViewById<EditText>(R.id.urlInput)
+        val openWeb = {
+            val url = urlInput.text.toString()
+            if (url.isBlank()) {
+                Toast.makeText(this, "Escribe o pega un enlace", Toast.LENGTH_SHORT).show()
+            } else {
+                startActivity(Intent(this, WebTranslateActivity::class.java).putExtra(WebTranslateActivity.EXTRA_URL, url))
+            }
+        }
+        findViewById<Button>(R.id.openWebButton).setOnClickListener { openWeb() }
+        urlInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_GO) openWeb()
+            actionId == EditorInfo.IME_ACTION_GO
+        }
 
         startButton.setOnClickListener { onStartClicked() }
         findViewById<Button>(R.id.stopButton).setOnClickListener {
