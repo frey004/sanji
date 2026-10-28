@@ -11,15 +11,33 @@ import android.text.StaticLayout
 import android.text.TextPaint
 import android.view.View
 
-data class TranslatedBlock(val bounds: Rect, val text: String)
+data class TranslatedBlock(val bounds: Rect, val text: String, val isDialogue: Boolean = false)
+
+/** Colores de los recuadros de traducción. */
+data class OverlayStyle(val background: Int, val text: Int, val border: Int? = null) {
+    companion object {
+        val DARK = OverlayStyle(Color.argb(240, 20, 20, 24), Color.WHITE)
+
+        /** Claro y translúcido, a juego con los cuadros blancos de Uma Musume. */
+        fun light(opacity: Int) = OverlayStyle(
+            background = Color.argb((opacity.coerceIn(0, 100) * 255) / 100, 255, 255, 255),
+            text = Color.rgb(74, 52, 40),
+            border = Color.argb(200, 240, 140, 180),
+        )
+    }
+}
 
 /** Dibuja cada traducción encima del texto original, en sus mismas coordenadas. */
 class TranslationOverlayView(context: Context) : View(context) {
 
     private val density = resources.displayMetrics.density
     private val scaledDensity = density * resources.configuration.fontScale
-    private val background = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(240, 20, 20, 24) }
-    private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE }
+    private val background = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 1.5f * density
+    }
+    private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private val location = IntArray(2)
 
     var blocks: List<TranslatedBlock> = emptyList()
@@ -28,6 +46,25 @@ class TranslationOverlayView(context: Context) : View(context) {
             invalidate()
         }
 
+    var style: OverlayStyle = OverlayStyle.DARK
+        set(value) {
+            field = value
+            background.color = value.background
+            textPaint.color = value.text
+            value.border?.let { borderPaint.color = it }
+            // Con fondo translúcido, una sombra suave mantiene el texto legible.
+            if (Color.alpha(value.background) < 200) {
+                textPaint.setShadowLayer(2 * density, 0f, 0f, Color.WHITE)
+            } else {
+                textPaint.clearShadowLayer()
+            }
+            invalidate()
+        }
+
+    init {
+        style = OverlayStyle.DARK
+    }
+
     override fun onDraw(canvas: Canvas) {
         if (blocks.isEmpty()) return
         // Las coordenadas del OCR son de pantalla completa; compensamos si la
@@ -35,10 +72,11 @@ class TranslationOverlayView(context: Context) : View(context) {
         getLocationOnScreen(location)
         canvas.save()
         canvas.translate(-location[0].toFloat(), -location[1].toFloat())
-        val pad = 4 * density
         for (block in blocks) {
+            val pad = (if (block.isDialogue) 8 else 4) * density
             val width = (block.bounds.width() + 2 * pad).toInt().coerceAtLeast(1)
-            val layout = fitText(block.text, width - (2 * pad).toInt(), block.bounds.height())
+            val maxSize = (if (block.isDialogue) 22 else 28) * scaledDensity
+            val layout = fitText(block.text, width - (2 * pad).toInt(), block.bounds.height(), maxSize)
             val height = maxOf(block.bounds.height().toFloat(), layout.height.toFloat()) + 2 * pad
             val rect = RectF(
                 block.bounds.left - pad,
@@ -46,7 +84,9 @@ class TranslationOverlayView(context: Context) : View(context) {
                 block.bounds.left - pad + width,
                 block.bounds.top - pad + height,
             )
-            canvas.drawRoundRect(rect, 6 * density, 6 * density, background)
+            val radius = (if (block.isDialogue) 12 else 6) * density
+            canvas.drawRoundRect(rect, radius, radius, background)
+            if (style.border != null) canvas.drawRoundRect(rect, radius, radius, borderPaint)
             canvas.save()
             canvas.translate(rect.left + pad, rect.top + pad)
             layout.draw(canvas)
@@ -56,9 +96,9 @@ class TranslationOverlayView(context: Context) : View(context) {
     }
 
     /** Busca el tamaño de letra más grande con el que el texto cabe en el recuadro. */
-    private fun fitText(text: String, width: Int, height: Int): StaticLayout {
+    private fun fitText(text: String, width: Int, height: Int, maxSize: Float): StaticLayout {
         val minSize = 9 * scaledDensity
-        var size = minOf(height.toFloat(), 28 * scaledDensity).coerceAtLeast(minSize)
+        var size = minOf(height.toFloat(), maxSize).coerceAtLeast(minSize)
         while (true) {
             textPaint.textSize = size
             val layout = StaticLayout.Builder.obtain(text, 0, text.length, textPaint, width.coerceAtLeast(1))

@@ -16,5 +16,10 @@
     <string name="web_share_label">Traducir página</string>
     <string name="web_show_original">Ver original</string>
     <string name="web_show_translation">Ver traducción</string>
+    <string name="uma_section">Uma Musume</string>
+    <string name="uma_section_hint">Modo especial para el juego: traduce solo los diálogos, las opciones de selección y los menús (sin números ni estadísticas), espera a que cada diálogo termine de escribirse y usa subtítulos claros y translúcidos. El idioma de destino es el de «Traducir a».</string>
+    <string name="uma_version_label">Versión del juego</string>
+    <string name="uma_opacity_label">Opacidad del fondo de los subtítulos: %1$d %%</string>
+    <string name="uma_start">Iniciar modo Uma Musume</string>
     <string name="screen_section">Traducción en vivo de la pantalla</string>
 </resources>

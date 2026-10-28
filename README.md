@@ -25,6 +25,22 @@ Requiere Android 8.0 o superior.
 También puedes **compartir** un enlace desde Chrome u otra app y elegir
 «Traducir página».
 
+### Modo Uma Musume
+
+Sección dedicada al juego **Uma Musume Pretty Derby**:
+
+1. Elige la versión del juego (japonesa o global en inglés) y el idioma al que traducir.
+2. Ajusta la **opacidad del fondo de los subtítulos**: son claros y translúcidos,
+   a juego con los cuadros del juego, en lugar de recuadros negros.
+3. Pulsa **Iniciar modo Uma Musume**. Si el juego está instalado, se abre solo.
+4. El tiempo real ya viene activado (burbuja **ウマ**):
+   - Traduce solo **diálogos, opciones de selección y menús**; ignora números,
+     estadísticas, monedas y contadores.
+   - Espera a que cada diálogo termine de escribirse antes de traducirlo.
+   - Tocar la burbuja fuerza una traducción; mantenerla pulsada pausa/reanuda el tiempo real.
+
+Los cambios de opacidad o versión se aplican al momento, sin reiniciar la burbuja.
+
 ### Traducción en vivo de la pantalla
 
 1. Elige el idioma del texto (inglés, japonés, chino, coreano…) y el idioma al que traducir.

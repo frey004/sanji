@@ -7,6 +7,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Para abrir Uma Musume directamente al iniciar su modo. -->
+    <queries>
+        <package android:name="jp.co.cygames.umamusume" />
+        <package android:name="com.cygames.umamusume" />
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"

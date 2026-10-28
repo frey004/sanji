@@ -63,12 +63,19 @@ class TranslatorService : Service() {
         const val ACTION_UPDATE_LANGUAGES = "update_languages"
         const val EXTRA_RESULT_CODE = "result_code"
         const val EXTRA_DATA = "data"
+        /** Modo Uma Musume: solo diálogos, opciones y menús, con subtítulos claros. */
+        const val EXTRA_GAME = "game"
         private const val CHANNEL_ID = "traductor"
         private const val NOTIFICATION_ID = 1
         private const val LIVE_INTERVAL_MS = 1500L
+        private const val GAME_INTERVAL_MS = 1000L
 
         @Volatile
         var isRunning = false
+            private set
+
+        @Volatile
+        var gameMode = false
             private set
     }
 
@@ -102,6 +109,8 @@ class TranslatorService : Service() {
     private var busy = false
     private var liveJob: Job? = null
     private var lastSignature = ""
+    /** Texto visto en la última pasada en tiempo real que aún no se ha confirmado. */
+    private var pendingSignature: String? = null
     /** Número de fotogramas cuando la pantalla quedó quieta tras mostrar la traducción. */
     private var settledFrame = -1
 
@@ -119,6 +128,7 @@ class TranslatorService : Service() {
             }
         }
 
+        if (projection == null) gameMode = intent?.getBooleanExtra(EXTRA_GAME, false) ?: false
         // Android exige estar en primer plano antes de obtener la MediaProjection.
         ServiceCompat.startForeground(
             this, NOTIFICATION_ID, buildNotification(),
@@ -151,6 +161,8 @@ class TranslatorService : Service() {
         startCapture()
         addOverlay()
         addBubble()
+        // En el juego los diálogos cambian solos: el tiempo real arranca activado.
+        if (gameMode) toggleLive()
         return START_NOT_STICKY
     }
 
@@ -159,14 +171,19 @@ class TranslatorService : Service() {
     private fun loadLanguages() {
         recognizer?.close()
         translator?.close()
-        source = Languages.source(this)
+        source = if (gameMode) UmaMusume.source(this) else Languages.source(this)
         recognizer = Languages.recognizer(source)
         translator = Languages.translator(source, Languages.target(this))
         modelReady = false
         cache.clear()
         lastSignature = ""
+        pendingSignature = null
         overlay?.blocks = emptyList()
+        overlay?.style = overlayStyle()
     }
+
+    private fun overlayStyle() =
+        if (gameMode) OverlayStyle.light(UmaMusume.opacity(this)) else OverlayStyle.DARK
 
     private suspend fun ensureModel(translator: Translator) {
         if (modelReady) return
@@ -286,10 +303,21 @@ class TranslatorService : Service() {
                 val found = result.textBlocks.mapNotNull { block ->
                     val box = block.boundingBox ?: return@mapNotNull null
                     val text = block.lines.joinToString(source.lineSeparator) { it.text.trim() }
-                    if (text.count { it.isLetter() } < 2) null else box to text
+                    val keep = if (gameMode) UmaMusume.isGameText(text) else text.count { it.isLetter() } >= 2
+                    if (keep) box to text else null
                 }
                 val signature = found.joinToString("\u0000") { it.second }
-                if (fromLive && signature == lastSignature) return@launch
+                if (fromLive && signature == lastSignature) {
+                    pendingSignature = null
+                    return@launch
+                }
+                if (fromLive && gameMode && signature != pendingSignature) {
+                    // Los diálogos aparecen letra a letra: esperamos a que el
+                    // texto deje de cambiar para no traducir frases a medias.
+                    pendingSignature = signature
+                    return@launch
+                }
+                pendingSignature = null
                 lastSignature = signature
 
                 if (found.isEmpty()) {
@@ -301,7 +329,7 @@ class TranslatorService : Service() {
                 overlay?.blocks = found.map { (box, text) ->
                     val translated = cache[text]
                         ?: (currentTranslator?.translate(text)?.await() ?: text).also { cache[text] = it }
-                    TranslatedBlock(box, translated)
+                    TranslatedBlock(box, translated, gameMode && UmaMusume.isDialogue(box, screenWidth, screenHeight))
                 }
             } catch (e: Exception) {
                 lastSignature = ""
@@ -332,8 +360,10 @@ class TranslatorService : Service() {
             liveJob = scope.launch {
                 while (isActive) {
                     // Si no ha llegado ningún fotograma nuevo, la pantalla no cambió.
-                    if (!busy && frameCount.get() != settledFrame) translateScreen(fromLive = true)
-                    delay(LIVE_INTERVAL_MS)
+                    if (!busy && (frameCount.get() != settledFrame || pendingSignature != null)) {
+                        translateScreen(fromLive = true)
+                    }
+                    delay(if (gameMode) GAME_INTERVAL_MS else LIVE_INTERVAL_MS)
                 }
             }
             Toast.makeText(this, "Tiempo real activado", Toast.LENGTH_SHORT).show()
@@ -365,6 +395,7 @@ class TranslatorService : Service() {
                 layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
         }
+        view.style = overlayStyle()
         windowManager.addView(view, params)
         overlay = view
     }
@@ -374,7 +405,7 @@ class TranslatorService : Service() {
         val density = resources.displayMetrics.density
         val size = (56 * density).toInt()
         val view = TextView(this).apply {
-            text = "文A"
+            text = if (gameMode) "ウマ" else "文A"
             textSize = 18f
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
@@ -452,7 +483,11 @@ class TranslatorService : Service() {
     }
 
     private fun updateBubbleColor() {
-        val color = if (liveJob != null) Color.rgb(46, 125, 50) else Color.rgb(21, 101, 192)
+        val color = when {
+            liveJob != null -> Color.rgb(46, 125, 50)
+            gameMode -> Color.rgb(216, 27, 96)
+            else -> Color.rgb(21, 101, 192)
+        }
         bubble?.background = GradientDrawable().apply {
             shape = GradientDrawable.OVAL
             setColor(color)
@@ -483,7 +518,7 @@ class TranslatorService : Service() {
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_translate)
-            .setContentTitle("Traductor de pantalla activo")
+            .setContentTitle(if (gameMode) "Traductor de Uma Musume activo" else "Traductor de pantalla activo")
             .setContentText("Toca la burbuja para traducir · mantenla pulsada para tiempo real")
             .setContentIntent(openIntent)
             .addAction(0, "Detener", stopIntent)
@@ -493,6 +528,7 @@ class TranslatorService : Service() {
 
     override fun onDestroy() {
         isRunning = false
+        gameMode = false
         scope.cancel()
         overlay?.let { runCatching { windowManager.removeView(it) } }
         bubble?.let { runCatching { windowManager.removeView(it) } }

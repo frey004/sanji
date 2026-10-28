@@ -14,6 +14,7 @@ import android.widget.ArrayAdapter
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
+import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -29,7 +30,10 @@ class MainActivity : ComponentActivity() {
     private lateinit var targetSpinner: Spinner
     private lateinit var startButton: Button
     private lateinit var statusText: TextView
+    private lateinit var umaVersionSpinner: Spinner
     private var askedNotifications = false
+    /** Si el último botón pulsado fue el del modo Uma Musume. */
+    private var startingGame = false
 
     private val projectionLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -39,17 +43,28 @@ class MainActivity : ComponentActivity() {
                     .setAction(TranslatorService.ACTION_START)
                     .putExtra(TranslatorService.EXTRA_RESULT_CODE, result.resultCode)
                     .putExtra(TranslatorService.EXTRA_DATA, data)
+                    .putExtra(TranslatorService.EXTRA_GAME, startingGame)
                 ContextCompat.startForegroundService(this, intent)
-                statusText.text = "Burbuja activa. Abre la app que quieras traducir."
-                moveTaskToBack(true)
+                val game = if (startingGame) UmaMusume.launchIntent(this) else null
+                if (game != null) {
+                    statusText.text = "Modo Uma Musume activo."
+                    startActivity(game)
+                } else {
+                    statusText.text = if (startingGame) {
+                        "Modo Uma Musume activo. Abre el juego."
+                    } else {
+                        "Burbuja activa. Abre la app que quieras traducir."
+                    }
+                    moveTaskToBack(true)
+                }
             } else {
                 statusText.text = "Hace falta el permiso de captura de pantalla."
             }
-            startButton.isEnabled = true
+            setStartButtonsEnabled(true)
         }
 
     private val notificationLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { onStartClicked() }
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { onStartClicked(startingGame) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,7 +93,38 @@ class MainActivity : ComponentActivity() {
             actionId == EditorInfo.IME_ACTION_GO
         }
 
-        startButton.setOnClickListener { onStartClicked() }
+        umaVersionSpinner = findViewById(R.id.umaVersionSpinner)
+        umaVersionSpinner.adapter = ArrayAdapter(
+            this, android.R.layout.simple_spinner_dropdown_item, UmaMusume.versions.map { it.name },
+        )
+        umaVersionSpinner.setSelection(UmaMusume.versions.indexOf(UmaMusume.source(this)))
+        umaVersionSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val version = UmaMusume.versions[position]
+                if (version == UmaMusume.source(this@MainActivity)) return
+                UmaMusume.saveSource(this@MainActivity, version)
+                refreshRunningService()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        val opacityLabel = findViewById<TextView>(R.id.umaOpacityLabel)
+        val opacity = findViewById<SeekBar>(R.id.umaOpacity)
+        opacity.progress = UmaMusume.opacity(this)
+        opacityLabel.text = getString(R.string.uma_opacity_label, opacity.progress)
+        opacity.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                opacityLabel.text = getString(R.string.uma_opacity_label, progress)
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+                UmaMusume.saveOpacity(this@MainActivity, seekBar.progress)
+                refreshRunningService()
+            }
+        })
+        findViewById<Button>(R.id.umaStartButton).setOnClickListener { onStartClicked(game = true) }
+
+        startButton.setOnClickListener { onStartClicked(game = false) }
         findViewById<Button>(R.id.stopButton).setOnClickListener {
             if (TranslatorService.isRunning) {
                 startService(Intent(this, TranslatorService::class.java).setAction(TranslatorService.ACTION_STOP))
@@ -89,7 +135,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (TranslatorService.isRunning) statusText.text = "Burbuja activa."
+        if (TranslatorService.isRunning) {
+            statusText.text = if (TranslatorService.gameMode) "Modo Uma Musume activo." else "Burbuja activa."
+        }
     }
 
     private fun setupSpinner(spinner: Spinner, items: List<Language>, selected: Language) {
@@ -110,16 +158,31 @@ class MainActivity : ComponentActivity() {
         val target = selectedTarget()
         if (source == Languages.source(this) && target == Languages.target(this)) return
         Languages.save(this, source, target)
+        refreshRunningService()
+    }
+
+    /** Si la burbuja ya está activa, aplica los ajustes nuevos sin pedir permisos de nuevo. */
+    private fun refreshRunningService() {
         if (TranslatorService.isRunning) {
-            // La burbuja ya está activa: que cambie de idioma sin pedir permisos de nuevo.
             startService(Intent(this, TranslatorService::class.java).setAction(TranslatorService.ACTION_UPDATE_LANGUAGES))
         }
     }
 
-    private fun onStartClicked() {
+    private fun setStartButtonsEnabled(enabled: Boolean) {
+        startButton.isEnabled = enabled
+        findViewById<Button>(R.id.umaStartButton).isEnabled = enabled
+    }
+
+    private fun onStartClicked(game: Boolean) {
+        startingGame = game
         if (TranslatorService.isRunning) {
+            if (TranslatorService.gameMode != game) {
+                Toast.makeText(this, "Pulsa Detener antes de cambiar de modo", Toast.LENGTH_LONG).show()
+                return
+            }
             Toast.makeText(this, "La burbuja ya está activa", Toast.LENGTH_SHORT).show()
-            moveTaskToBack(true)
+            val gameIntent = if (game) UmaMusume.launchIntent(this) else null
+            if (gameIntent != null) startActivity(gameIntent) else moveTaskToBack(true)
             return
         }
         if (!Settings.canDrawOverlays(this)) {
@@ -135,16 +198,17 @@ class MainActivity : ComponentActivity() {
             return
         }
 
-        startButton.isEnabled = false
+        setStartButtonsEnabled(false)
         lifecycleScope.launch {
-            val translator = Languages.translator(selectedSource(), selectedTarget())
+            val source = if (game) UmaMusume.source(this@MainActivity) else selectedSource()
+            val translator = Languages.translator(source, selectedTarget())
             if (translator != null) {
                 statusText.text = "Descargando el idioma (solo la primera vez)…"
                 try {
                     Languages.downloadModel(translator)
                 } catch (e: Exception) {
                     statusText.text = "No se pudo descargar el idioma. Revisa tu conexión.\n${e.message}"
-                    startButton.isEnabled = true
+                    setStartButtonsEnabled(true)
                     return@launch
                 } finally {
                     translator.close()
