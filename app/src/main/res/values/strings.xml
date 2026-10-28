@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Traductor de Pantalla</string>
+    <string name="intro">Traduce el texto de cualquier app, juego o imagen directamente sobre la pantalla.</string>
+    <string name="source_label">Idioma del texto en pantalla</string>
+    <string name="target_label">Traducir a</string>
+    <string name="start">Iniciar burbuja</string>
+    <string name="stop">Detener</string>
+    <string name="howto">Cómo se usa:\n\n• Toca la burbuja 文A para traducir lo que hay en pantalla.\n• Vuelve a tocarla para quitar la traducción.\n• Mantenla pulsada para activar/desactivar el modo tiempo real (la burbuja se pone verde y la traducción se actualiza sola).\n• Arrástrala para moverla.\n\nLa primera vez se descarga el idioma (~30 MB); después funciona sin internet.</string>
+</resources>
