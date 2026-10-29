@@ -151,7 +151,7 @@ class LiveCaptionService : Service() {
         isRunning = true
         windowManager = getSystemService(WindowManager::class.java)
         autoDetect = LiveCaptions.autoDetect(this)
-        onlineTranslation = LiveCaptions.onlineTranslation(this)
+        onlineTranslation = Languages.onlineTranslation(this)
         addCaptionBox()
         showPartial("Cargando el reconocimiento de voz…")
 

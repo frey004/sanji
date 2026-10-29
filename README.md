@@ -12,6 +12,15 @@ Requiere Android 8.0 o superior.
 
 ## Uso
 
+**Idioma automático:** en la pantalla en vivo, los enlaces web y la descarga de
+manga, la opción por defecto es **Detectar automáticamente**: la app averigua el
+idioma de cada texto (sin conexión, con ML Kit) y deja como está lo que ya está
+en tu idioma. Directos detecta japonés, chino, coreano o inglés.
+
+**Traducción en línea:** el interruptor de la pantalla de inicio (activado por
+defecto) traduce con Google Translate por internet, que lo hace mucho mejor;
+sin conexión se usa la traducción del móvil (ML Kit).
+
 La pantalla de inicio tiene un cuadro por cada modo; al tocarlo se abre su
 propia pantalla con sus ajustes:
 

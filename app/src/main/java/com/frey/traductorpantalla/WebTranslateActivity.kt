@@ -29,16 +29,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
-import com.google.mlkit.nl.translate.Translator
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -47,7 +43,7 @@ import java.net.URLEncoder
 
 /**
  * Lector que traduce páginas web en el propio móvil: el script
- * web_translator.js extrae los textos, aquí se traducen con ML Kit y se
+ * web_translator.js extrae los textos, aquí se traducen (ver TextTranslator) y se
  * devuelven a la página para sustituir el original. La página se recorre
  * por pantallas («Pág 01/02») y la traducción se puede descargar como texto.
  */
@@ -89,12 +85,7 @@ class WebTranslateActivity : ComponentActivity() {
     }
 
     private lateinit var script: String
-    private var translator: Translator? = null
-    private val modelLock = Mutex()
-    private var modelReady = false
-    private val cache = object : LinkedHashMap<String, String>(256, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?) = size > 3000
-    }
+    private var translator: TextTranslator? = null
 
     /** Lotes de textos pendientes, etiquetados con la página de la que vienen. */
     private val queue = Channel<Pair<Int, JSONArray>>(Channel.UNLIMITED)
@@ -226,13 +217,11 @@ class WebTranslateActivity : ComponentActivity() {
         translator?.close()
         val source = Languages.source(this)
         val target = Languages.target(this)
-        translator = Languages.translator(source, target)
-        modelReady = false
-        cache.clear()
-        statusText.text = if (translator == null) {
-            "El idioma de origen y el de destino son iguales: no se traducirá."
-        } else {
-            "${source.name} → ${target.name}"
+        translator = if (source.code == target.code) null else TextTranslator(this, source, target)
+        statusText.text = when {
+            translator == null -> "El idioma de origen y el de destino son iguales: no se traducirá."
+            source == Languages.AUTO -> "Idioma detectado automáticamente → ${target.name}"
+            else -> "${source.name} → ${target.name}"
         }
         toggleButton.visibility = if (translator == null) View.INVISIBLE else View.VISIBLE
     }
@@ -465,27 +454,17 @@ class WebTranslateActivity : ComponentActivity() {
         }
     }
 
-    private suspend fun ensureModel(translator: Translator) = modelLock.withLock {
-        if (modelReady) return@withLock
-        statusText.text = "Descargando el idioma (solo la primera vez)…"
-        Languages.downloadModel(translator)
-        modelReady = true
-        statusText.text = "${Languages.source(this).name} → ${Languages.target(this).name}"
-    }
-
     private suspend fun translateBatch(page: Int, batch: JSONArray) {
         try {
             val current = translator ?: return
             if (page != pageId) return
-            ensureModel(current)
+            val items = (0 until batch.length()).map { batch.getJSONObject(it) }
+            // Todo el lote de una vez: en línea son pocas peticiones, y en
+            // automático el idioma se averigua con más texto.
+            val translated = current.translateAll(items.map { it.getString("text") })
+            if (page != pageId) return
             val results = JSONArray()
-            for (i in 0 until batch.length()) {
-                if (page != pageId) return
-                val item = batch.getJSONObject(i)
-                val text = item.getString("text")
-                val translated = cache[text] ?: current.translate(text).await().also { cache[text] = it }
-                results.put(JSONObject().put("id", item.getInt("id")).put("text", translated))
-            }
+            items.forEachIndexed { i, item -> results.put(JSONObject().put("id", item.getInt("id")).put("text", translated[i])) }
             if (page == pageId) {
                 webView.evaluateJavascript("window.__tr && window.__tr.apply($results)", null)
                 // Al traducir cambia la altura del texto, y con ella el número de páginas.

@@ -89,14 +89,6 @@ object LiveCaptions {
 
     private fun isSenseVoiceReady(context: Context) = File(senseVoiceDir(context), READY_MARK).exists()
 
-    /** Traducir con Google Translate en línea (mejor) y, si falla, sin conexión. */
-    fun onlineTranslation(context: Context) =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean("online", true)
-
-    fun saveOnlineTranslation(context: Context, online: Boolean) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean("online", online).apply()
-    }
-
     /** true: escucha el micrófono; false: el audio de las apps (Android 10+). */
     fun useMicrophone(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean("microphone", false)

@@ -201,6 +201,23 @@
             </LinearLayout>
         </GridLayout>
 
+        <Switch
+            android:id="@+id/onlineSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_marginTop="24dp"
+            android:text="@string/live_online"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:text="@string/online_hint"
+            android:textColor="#757575"
+            android:textSize="12sp" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -88,6 +88,8 @@ dependencies {
     implementation("com.google.mlkit:text-recognition-devanagari:16.0.1")
     // Traducción sin conexión (descarga cada idioma una sola vez, ~30 MB).
     implementation("com.google.mlkit:translate:17.0.3")
+    // Identificación del idioma de un texto, sin conexión (modo automático).
+    implementation("com.google.mlkit:language-id:17.0.6")
     // Reconocimiento de voz sin conexión para los subtítulos de directos
     // (Vosk para los idiomas que SenseVoice no reconoce).
     implementation("com.alphacephei:vosk-android:0.3.47@aar")

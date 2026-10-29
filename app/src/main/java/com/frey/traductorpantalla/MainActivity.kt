@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -38,6 +39,10 @@ class MainActivity : ComponentActivity() {
         // Esquinas redondeadas según el fondo del icono.
         findViewById<ImageView>(R.id.umaIcon).clipToOutline = true
 
+        val online = findViewById<Switch>(R.id.onlineSwitch)
+        online.isChecked = Languages.onlineTranslation(this)
+        online.setOnCheckedChangeListener { _, checked -> Languages.saveOnlineTranslation(this, checked) }
+
         findViewById<TextView>(R.id.versionText).text = getString(R.string.update_version, BuildConfig.VERSION_NAME)
         findViewById<Button>(R.id.updateButton).setOnClickListener { checkForUpdate(manual = true) }
         if (!checkedForUpdate) {
@@ -48,6 +53,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        // También se puede cambiar desde la pantalla de Directos.
+        findViewById<Switch>(R.id.onlineSwitch).isChecked = Languages.onlineTranslation(this)
         // Vuelve de los ajustes de «Instalar apps desconocidas».
         pendingApk?.let { apk ->
             if (Updater.canInstall(this)) {

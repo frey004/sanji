@@ -52,4 +52,5 @@
     <string name="live_auto_hint">Distingue solo entre japonés, chino, coreano e inglés, y cambia sola si el directo cambia de idioma. Arriba del recuadro pone qué idioma está oyendo.</string>
     <string name="live_online">Traducción en línea (mejor calidad)</string>
     <string name="live_online_hint">Usa Google Translate por internet, que traduce mucho mejor el japonés. Si no hay conexión, traduce sin internet automáticamente.</string>
+    <string name="online_hint">Para todos los modos. Google Translate por internet traduce mucho mejor y detecta el idioma; sin conexión se usa la traducción del móvil.</string>
 </resources>

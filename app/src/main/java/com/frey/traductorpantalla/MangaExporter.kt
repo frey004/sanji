@@ -15,12 +15,8 @@ import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.Base64
 import android.webkit.CookieManager
-import com.google.mlkit.nl.translate.Translator
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognizer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
@@ -67,12 +63,11 @@ class MangaExporter(
         deleteRecursively()
         mkdirs()
     }
-    private val recognizer: TextRecognizer? = if (translateImages) Languages.recognizer(source) else null
-    private val translator: Translator? = if (translateImages) Languages.translator(source, target) else null
-    private val cache = HashMap<String, String>()
+    private val reader: TextReader? = if (translateImages) TextReader(source) else null
+    private val translator: TextTranslator? = if (translateImages) TextTranslator(context, source, target) else null
 
     fun close() {
-        recognizer?.close()
+        reader?.close()
         translator?.close()
         dir.deleteRecursively()
     }
@@ -86,10 +81,6 @@ class MangaExporter(
         userAgent: String,
         onProgress: (String) -> Unit,
     ): List<MangaPage> {
-        translator?.let {
-            withContext(Dispatchers.Main) { onProgress("Preparando el idioma…") }
-            Languages.downloadModel(it)
-        }
         val pages = mutableListOf<MangaPage>()
         for ((index, url) in urls.withIndex()) {
             coroutineContext.ensureActive()
@@ -182,16 +173,14 @@ class MangaExporter(
     // ---------------------------------------------------------------- traducción
 
     private suspend fun translateBitmap(bitmap: Bitmap) {
-        val recognizer = recognizer ?: return
+        val reader = reader ?: return
         val translator = translator ?: return
-        val result = recognizer.process(InputImage.fromBitmap(bitmap, 0)).await()
+        val found = reader.read(bitmap).filter { (_, text) -> text.any { it.isLetter() } }
+        val translated = translator.translateAll(found.map { it.second })
         val canvas = Canvas(bitmap)
-        for (block in result.textBlocks) {
-            val box = block.boundingBox ?: continue
-            val text = block.lines.joinToString(source.lineSeparator) { it.text.trim() }
-            if (text.none { it.isLetter() }) continue
-            val translated = cache[text] ?: translator.translate(text).await().also { cache[text] = it }
-            drawTranslation(canvas, bitmap.width, box, translated)
+        found.forEachIndexed { i, (box, text) ->
+            // Lo que ya está en el idioma de destino no se tapa.
+            if (translated[i] != text) drawTranslation(canvas, bitmap.width, box, translated[i])
         }
     }
 

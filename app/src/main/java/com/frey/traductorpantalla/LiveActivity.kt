@@ -65,8 +65,8 @@ class LiveActivity : ComponentActivity() {
         }
 
         val online = findViewById<Switch>(R.id.onlineSwitch)
-        online.isChecked = LiveCaptions.onlineTranslation(this)
-        online.setOnCheckedChangeListener { _, checked -> LiveCaptions.saveOnlineTranslation(this, checked) }
+        online.isChecked = Languages.onlineTranslation(this)
+        online.setOnCheckedChangeListener { _, checked -> Languages.saveOnlineTranslation(this, checked) }
 
         val appAudio = findViewById<RadioButton>(R.id.sourceAppAudio)
         val microphone = findViewById<RadioButton>(R.id.sourceMicrophone)
@@ -90,6 +90,8 @@ class LiveActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        // El interruptor de traducción en línea también está en la pantalla de inicio.
+        findViewById<Switch>(R.id.onlineSwitch).isChecked = Languages.onlineTranslation(this)
         if (LiveCaptionService.isRunning) statusText.text = "Subtítulos activos."
     }
 

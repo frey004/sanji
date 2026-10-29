@@ -24,7 +24,13 @@ data class Language(val name: String, val code: String, val script: Script = Scr
 }
 
 object Languages {
+    /** Opción «Detectar automáticamente»: el idioma se averigua en cada texto. */
+    val AUTO = Language("Detectar automáticamente", "auto")
+    val JAPANESE = Language("Japonés", TranslateLanguage.JAPANESE, Script.JAPANESE)
+    val KOREAN = Language("Coreano", TranslateLanguage.KOREAN, Script.KOREAN)
+
     val sources = listOf(
+        AUTO,
         Language("Inglés", TranslateLanguage.ENGLISH),
         Language("Japonés", TranslateLanguage.JAPANESE, Script.JAPANESE),
         Language("Chino", TranslateLanguage.CHINESE, Script.CHINESE),
@@ -56,14 +62,25 @@ object Languages {
 
     fun source(context: Context): Language {
         val code = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getString("source", TranslateLanguage.ENGLISH)
-        return sources.firstOrNull { it.code == code } ?: sources[0]
+            .getString("source", AUTO.code)
+        return sources.firstOrNull { it.code == code } ?: AUTO
     }
 
     fun target(context: Context): Language {
         val code = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getString("target", TranslateLanguage.SPANISH)
         return targets.firstOrNull { it.code == code } ?: targets[0]
+    }
+
+    /** Nombre de un idioma a partir de su código (p. ej. «ja» → «Japonés»). */
+    fun nameOf(code: String) = (sources + targets).firstOrNull { it.code == code }?.name ?: code
+
+    /** Traducir con Google Translate en línea (mejor) y, si falla, sin conexión. Vale para todos los modos. */
+    fun onlineTranslation(context: Context) =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean("online", true)
+
+    fun saveOnlineTranslation(context: Context, online: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean("online", online).apply()
     }
 
     fun save(context: Context, source: Language, target: Language) {
@@ -83,7 +100,8 @@ object Languages {
 
     /** Devuelve null si origen y destino coinciden (no hay nada que traducir). */
     fun translator(source: Language, target: Language): Translator? {
-        if (source.code == target.code) return null
+        // En automático el traductor se elige texto a texto (ver TextTranslator).
+        if (source.code == target.code || source == AUTO) return null
         val options = TranslatorOptions.Builder()
             .setSourceLanguage(source.code)
             .setTargetLanguage(target.code)

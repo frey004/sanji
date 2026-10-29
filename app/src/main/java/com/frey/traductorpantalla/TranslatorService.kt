@@ -36,9 +36,6 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.IntentCompat
-import com.google.mlkit.nl.translate.Translator
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognizer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -47,7 +44,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -98,13 +94,8 @@ class TranslatorService : Service() {
     private var bubble: TextView? = null
     private var bubbleParams: WindowManager.LayoutParams? = null
 
-    private lateinit var source: Language
-    private var recognizer: TextRecognizer? = null
-    private var translator: Translator? = null
-    private var modelReady = false
-    private val cache = object : LinkedHashMap<String, String>(64, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?) = size > 300
-    }
+    private var reader: TextReader? = null
+    private var translator: TextTranslator? = null
 
     private var busy = false
     private var liveJob: Job? = null
@@ -169,13 +160,11 @@ class TranslatorService : Service() {
     // ---------------------------------------------------------------- idiomas
 
     private fun loadLanguages() {
-        recognizer?.close()
+        reader?.close()
         translator?.close()
-        source = if (gameMode) UmaMusume.source else Languages.source(this)
-        recognizer = Languages.recognizer(source)
-        translator = Languages.translator(source, Languages.target(this))
-        modelReady = false
-        cache.clear()
+        val source = if (gameMode) UmaMusume.source else Languages.source(this)
+        reader = TextReader(source)
+        translator = TextTranslator(this, source, Languages.target(this))
         lastSignature = ""
         pendingSignature = null
         overlay?.blocks = emptyList()
@@ -184,13 +173,6 @@ class TranslatorService : Service() {
 
     private fun overlayStyle() =
         if (gameMode) OverlayStyle.light(UmaMusume.opacity(this)) else OverlayStyle.DARK
-
-    private suspend fun ensureModel(translator: Translator) {
-        if (modelReady) return
-        Toast.makeText(this, "Preparando idioma…", Toast.LENGTH_SHORT).show()
-        Languages.downloadModel(translator)
-        modelReady = true
-    }
 
     // ---------------------------------------------------------------- captura
 
@@ -295,16 +277,13 @@ class TranslatorService : Service() {
         scope.launch {
             try {
                 val bitmap = captureCleanScreen() ?: return@launch
-                val currentRecognizer = recognizer ?: return@launch
-                val currentTranslator = translator
-                val result = currentRecognizer.process(InputImage.fromBitmap(bitmap, 0)).await()
+                val currentReader = reader ?: return@launch
+                val currentTranslator = translator ?: return@launch
+                val read = currentReader.read(bitmap)
                 bitmap.recycle()
 
-                val found = result.textBlocks.mapNotNull { block ->
-                    val box = block.boundingBox ?: return@mapNotNull null
-                    val text = block.lines.joinToString(source.lineSeparator) { it.text.trim() }
-                    val keep = if (gameMode) UmaMusume.isGameText(text) else text.count { it.isLetter() } >= 2
-                    if (keep) box to text else null
+                val found = read.filter { (_, text) ->
+                    if (gameMode) UmaMusume.isGameText(text) else text.count { it.isLetter() } >= 2
                 }
                 val signature = found.joinToString("\u0000") { it.second }
                 if (fromLive && signature == lastSignature) {
@@ -325,11 +304,11 @@ class TranslatorService : Service() {
                     if (!fromLive) Toast.makeText(this@TranslatorService, "No se encontró texto", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
-                if (currentTranslator != null) ensureModel(currentTranslator)
-                overlay?.blocks = found.map { (box, text) ->
-                    val translated = cache[text]
-                        ?: (currentTranslator?.translate(text)?.await() ?: text).also { cache[text] = it }
-                    TranslatedBlock(box, translated, gameMode && UmaMusume.isDialogue(box, screenWidth, screenHeight))
+                val translated = currentTranslator.translateAll(found.map { it.second })
+                // Lo que ya estaba en tu idioma no se tapa.
+                overlay?.blocks = found.indices.filter { translated[it] != found[it].second }.map { i ->
+                    val box = found[i].first
+                    TranslatedBlock(box, translated[i], gameMode && UmaMusume.isDialogue(box, screenWidth, screenHeight))
                 }
             } catch (e: Exception) {
                 lastSignature = ""
@@ -543,7 +522,7 @@ class TranslatorService : Service() {
             imageReader?.close()
             captureThread.quitSafely()
         }
-        recognizer?.close()
+        reader?.close()
         translator?.close()
         super.onDestroy()
     }
