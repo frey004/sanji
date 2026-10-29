@@ -30,8 +30,9 @@ object LiveCaptions {
         TranslateLanguage.KOREAN,
         TranslateLanguage.ENGLISH,
     )
+    // La versión de 2024: la de 2025-09-09 está ajustada al cantonés y confunde los demás idiomas.
     private const val SENSE_VOICE_URL = "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/" +
-        "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09.tar.bz2"
+        "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2"
     private val senseVoiceFiles = setOf("model.int8.onnx", "tokens.txt")
 
     /** Modelo pequeño de Vosk para los demás idiomas. */

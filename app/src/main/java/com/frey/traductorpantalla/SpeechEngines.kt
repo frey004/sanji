@@ -44,6 +44,8 @@ class SenseVoiceEngine(
         /** Al empezar a hablar se incluye también lo de justo antes (0,4 s). */
         private const val LEAD_IN = 6400
         private const val PARTIAL_EVERY_MS = 500L
+        /** A veces separa con espacios las palabras en japonés o chino, que no los llevan. */
+        private val cjkSpaces = Regex("(?<=[\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}ー])\\s+(?=[\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}ー])")
     }
 
     private val vad = Vad(
@@ -135,7 +137,7 @@ class SenseVoiceEngine(
             stream.acceptWaveform(samples, SpeechEngine.SAMPLE_RATE)
             recognizer.decode(stream)
             val result = recognizer.getResult(stream)
-            val text = result.text.trim()
+            val text = result.text.trim().replace(cjkSpaces, "")
             if (text.none { it.isLetter() }) return null
             // SenseVoice da el idioma como «<|ja|>»; el cantonés se traduce como chino.
             val lang = result.lang.removePrefix("<|").removeSuffix("|>").let { if (it == "yue") "zh" else it }
