@@ -6,11 +6,8 @@
     <string name="start">Iniciar burbuja</string>
     <string name="stop">Detener</string>
     <string name="howto">Cómo se usa:\n\n• Toca la burbuja 文A para traducir lo que hay en pantalla.\n• Vuelve a tocarla para quitar la traducción.\n• Mantenla pulsada para activar/desactivar el modo tiempo real (la burbuja se pone verde y la traducción se actualiza sola).\n• Arrástrala para moverla.\n\nLa primera vez se descarga el idioma (~30 MB); después funciona sin internet.</string>
-    <string name="web_section_hint">Pega el enlace de la página (novela, noticia, foro…) y se abrirá ya traducida.</string>
     <string name="web_url_hint">https://… o texto a buscar</string>
     <string name="web_open">Abrir y traducir</string>
-    <string name="web_go">Ir</string>
-    <string name="web_title">Traductor web</string>
     <string name="web_share_label">Traducir página</string>
     <string name="web_show_original">Ver original</string>
     <string name="web_show_translation">Ver traducción</string>
@@ -29,6 +26,11 @@
     <string name="tile_web_hint">Abre una página ya traducida</string>
     <string name="screen_intro">Traduce el texto de cualquier app, juego o imagen directamente sobre la pantalla.</string>
     <string name="web_source_label">Idioma de la página</string>
-    <string name="web_howto">Puedes seguir navegando por los enlaces de la página: cada página nueva, y el contenido que se carga al hacer scroll, se traduce sola. Con «Ver original» cambias entre el texto original y el traducido.\n\nTambién puedes compartir un enlace desde Chrome u otra app y elegir «Traducir página».</string>
     <string name="uma_howto">Cómo se usa:\n\n• Al iniciar se abre el juego con la burbuja ウマ y el tiempo real ya activado.\n• Toca la burbuja para forzar una traducción.\n• Mantenla pulsada para pausar o reanudar el tiempo real.\n• Arrástrala para moverla.\n\nLos cambios de idioma y opacidad se aplican al momento.</string>
+    <string name="web_link">Link</string>
+    <string name="web_download">Descargar</string>
+    <string name="web_prev">Página anterior</string>
+    <string name="web_next">Página siguiente</string>
+    <string name="web_empty">Pulsa «Link» y pega el enlace de la página que quieres traducir.</string>
+    <string name="web_link_title">Abrir enlace</string>
 </resources>

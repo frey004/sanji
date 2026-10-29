@@ -41,16 +41,10 @@
             android:label="@string/tile_screen_title" />
 
         <activity
-            android:name=".LinkActivity"
-            android:exported="false"
-            android:label="@string/tile_web_title"
-            android:windowSoftInputMode="adjustResize" />
-
-        <activity
             android:name=".WebTranslateActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize"
             android:exported="true"
-            android:label="@string/web_title"
+            android:label="@string/tile_web_title"
             android:windowSoftInputMode="adjustResize">
             <!-- Compartir un enlace desde el navegador u otra app abre la traducción. -->
             <intent-filter android:label="@string/web_share_label">
