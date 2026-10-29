@@ -7,19 +7,58 @@
         <item name="android:windowBackground">@color/bg</item>
         <item name="android:textColorPrimary">@color/text</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
-        <item name="android:statusBarColor">@color/sanji_primary</item>
+        <item name="android:statusBarColor">@color/wood_dark</item>
         <item name="android:navigationBarColor">@color/bg</item>
         <item name="android:alertDialogTheme">@style/SanjiDialog</item>
+        <!-- Tipografía de época en toda la app. -->
+        <item name="android:textViewStyle">@style/Sanji.Text</item>
+        <item name="android:radioButtonStyle">@style/Sanji.Radio</item>
+        <item name="android:switchStyle">@style/Sanji.Switch</item>
+        <item name="android:checkboxStyle">@style/Sanji.Check</item>
+        <item name="android:editTextStyle">@style/Sanji.Edit</item>
     </style>
 
     <style name="SanjiDialog" parent="android:Theme.Material.Light.Dialog.Alert">
         <item name="android:colorAccent">@color/sanji_primary</item>
         <item name="android:windowBackground">@drawable/dialog_bg</item>
         <item name="android:textColorPrimary">@color/text</item>
+        <item name="android:textViewStyle">@style/Sanji.Text</item>
+        <item name="android:radioButtonStyle">@style/Sanji.Radio</item>
+        <item name="android:checkboxStyle">@style/Sanji.Check</item>
+        <item name="android:editTextStyle">@style/Sanji.Edit</item>
     </style>
 
     <!-- Base de los estilos «Sanji.*» (aapt exige que exista el padre implícito). -->
     <style name="Sanji" />
+
+    <style name="Sanji.Text" parent="android:Widget.Material.TextView">
+        <item name="android:fontFamily">@font/im_fell</item>
+    </style>
+
+    <style name="Sanji.Radio" parent="android:Widget.Material.CompoundButton.RadioButton">
+        <item name="android:fontFamily">@font/im_fell</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <style name="Sanji.Check" parent="android:Widget.Material.CompoundButton.CheckBox">
+        <item name="android:fontFamily">@font/im_fell</item>
+    </style>
+
+    <style name="Sanji.Switch" parent="android:Widget.Material.CompoundButton.Switch">
+        <item name="android:fontFamily">@font/im_fell</item>
+        <item name="android:thumbTint">@color/brass</item>
+        <item name="android:trackTint">@color/brass_dark</item>
+    </style>
+
+    <style name="Sanji.Edit" parent="android:Widget.Material.EditText">
+        <item name="android:fontFamily">@font/im_fell</item>
+    </style>
+
+    <!-- Títulos con letra decorativa victoriana. -->
+    <style name="Sanji.Title">
+        <item name="android:fontFamily">@font/cinzel_decorative</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
 
     <!-- Tarjeta: fondo redondeado con borde suave. -->
     <style name="Sanji.Card">
@@ -35,9 +74,10 @@
     <style name="Sanji.CardTitle">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">6dp</item>
         <item name="android:textColor">@color/text</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:fontFamily">@font/cinzel_decorative</item>
     </style>
 
     <style name="Sanji.Label">
@@ -46,14 +86,15 @@
         <item name="android:layout_marginTop">14dp</item>
         <item name="android:layout_marginBottom">6dp</item>
         <item name="android:textColor">@color/text_secondary</item>
-        <item name="android:textSize">13sp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">@font/im_fell_sc</item>
     </style>
 
     <style name="Sanji.Hint">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textColor">@color/text_secondary</item>
-        <item name="android:textSize">13sp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:lineSpacingMultiplier">1.15</item>
     </style>
 
@@ -81,14 +122,17 @@
         <item name="android:layout_height">54dp</item>
         <item name="android:layout_marginTop">10dp</item>
         <item name="android:textAllCaps">false</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:fontFamily">@font/im_fell_sc</item>
         <item name="android:stateListAnimator">@null</item>
     </style>
 
     <style name="Sanji.Button.Primary">
         <item name="android:background">@drawable/btn_primary</item>
-        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textColor">#FFF6E2</item>
+        <item name="android:shadowColor">#99000000</item>
+        <item name="android:shadowDy">1</item>
+        <item name="android:shadowRadius">2</item>
         <item name="android:elevation">3dp</item>
     </style>
 

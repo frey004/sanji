@@ -59,7 +59,7 @@ class LiveActivity : ComponentActivity() {
         setContentView(R.layout.activity_live)
         setupHeader(
             R.string.tile_live_title, R.string.live_subtitle, R.drawable.header_live,
-            Color.rgb(45, 43, 58), emoji = "🎙",
+            Color.rgb(21, 18, 15), emoji = "🎙",
         )
         startButton = findViewById(R.id.startButton)
         statusText = findViewById(R.id.statusText)
@@ -105,7 +105,7 @@ class LiveActivity : ComponentActivity() {
         val spinner = findViewById<Spinner>(R.id.sourceSpinner)
         val autoPanel = findViewById<View>(R.id.autoPanel)
         val names = listOf(getString(R.string.live_auto)) + LiveCaptions.sources.map { it.name }
-        spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, names)
+        spinner.adapter = ArrayAdapter(this, R.layout.spinner_item, names)
         val auto = LiveCaptions.autoDetect(this)
         spinner.setSelection(if (auto) 0 else LiveCaptions.sources.indexOf(LiveCaptions.source(this)) + 1)
         autoPanel.visibility = if (auto) View.VISIBLE else View.GONE
@@ -120,7 +120,7 @@ class LiveActivity : ComponentActivity() {
     }
 
     private fun setupSpinner(spinner: Spinner, items: List<Language>, selected: Language, onSelected: (Language) -> Unit) {
-        spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, items.map { it.name })
+        spinner.adapter = ArrayAdapter(this, R.layout.spinner_item, items.map { it.name })
         spinner.setSelection(items.indexOf(selected))
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) =

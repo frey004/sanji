@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Botón de metal pulido con borde oscuro. -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#40FFFFFF">
+    android:color="#50FFF3D6">
     <item>
         <shape android:shape="rectangle">
-            <corners android:radius="27dp" />
+            <corners android:radius="10dp" />
             <gradient
-                android:angle="135"
-                android:endColor="#FF9A76"
-                android:startColor="#FF6FA5" />
+                android:angle="270"
+                android:centerColor="#A4574A"
+                android:endColor="#5A2430"
+                android:startColor="#D9957A" />
+            <stroke
+                android:width="1.5dp"
+                android:color="#3E1820" />
         </shape>
     </item>
 </ripple>

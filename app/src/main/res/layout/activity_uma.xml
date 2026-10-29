@@ -46,8 +46,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
                     android:max="100"
-                    android:progressTint="#FF6FA5"
-                    android:thumbTint="#FF6FA5" />
+                    android:progressTint="#A4574A"
+                    android:thumbTint="@color/brass" />
             </LinearLayout>
 
             <LinearLayout style="@style/Sanji.Card">
@@ -69,7 +69,7 @@
                     style="@style/Sanji.Hint"
                     android:layout_marginTop="10dp"
                     android:gravity="center"
-                    android:textColor="#E8508A" />
+                    android:textColor="@color/sanji_primary" />
             </LinearLayout>
 
             <LinearLayout style="@style/Sanji.Card">

@@ -126,6 +126,11 @@ repositorio (*Settings → Secrets and variables → Actions*):
 Sin esos secretos el APK se compila igual, pero con una clave temporal distinta
 en cada compilación, y Android no dejará instalarlo como actualización.
 
+## Créditos
+
+Tipografías con licencia SIL Open Font License (ver `licenses/`):
+IM FELL English (Igino Marini) y Cinzel Decorative (Natanael Gama).
+
 ## Compilar
 
 GitHub Actions compila y publica el APK en cada push

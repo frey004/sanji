@@ -82,7 +82,7 @@ abstract class BubbleActivity : ComponentActivity() {
         selected: Language,
         onSelected: (Language) -> Unit,
     ) {
-        spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, items.map { it.name })
+        spinner.adapter = ArrayAdapter(this, R.layout.spinner_item, items.map { it.name })
         spinner.setSelection(items.indexOf(selected))
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) =

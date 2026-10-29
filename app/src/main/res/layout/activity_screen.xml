@@ -63,7 +63,7 @@
                     style="@style/Sanji.Hint"
                     android:layout_marginTop="10dp"
                     android:gravity="center"
-                    android:textColor="#00A884" />
+                    android:textColor="@color/sanji_primary" />
             </LinearLayout>
 
             <LinearLayout style="@style/Sanji.Card">

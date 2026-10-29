@@ -19,7 +19,7 @@ class UmaActivity : BubbleActivity() {
 
         setupHeader(
             R.string.tile_uma_title, R.string.uma_subtitle, R.drawable.header_uma,
-            Color.rgb(255, 111, 165), image = R.drawable.uma_musume,
+            Color.rgb(62, 24, 32), image = R.drawable.uma_musume,
         )
 
         setupLanguageSpinner(findViewById<Spinner>(R.id.targetSpinner), Languages.targets, Languages.target(this)) {

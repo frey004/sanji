@@ -1,12 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Cabecera con degradado y esquinas inferiores redondeadas. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <corners
-        android:bottomLeftRadius="32dp"
-        android:bottomRightRadius="32dp" />
-    <gradient
-        android:angle="135"
-        android:endColor="#00A8B5"
-        android:startColor="#00B894" />
-</shape>
+<!-- Cabecera de madera/metal con filo de latón y engranajes. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <corners
+                android:bottomLeftRadius="28dp"
+                android:bottomRightRadius="28dp" />
+            <solid android:color="#C9A45C" />
+        </shape>
+    </item>
+    <item android:bottom="3dp">
+        <shape android:shape="rectangle">
+            <corners
+                android:bottomLeftRadius="26dp"
+                android:bottomRightRadius="26dp" />
+            <gradient
+                android:angle="315"
+                android:endColor="#3F7A66"
+                android:startColor="#16302A" />
+        </shape>
+    </item>
+    <item
+        android:width="150dp"
+        android:height="150dp"
+        android:end="-30dp"
+        android:gravity="top|end"
+        android:top="-24dp"
+        android:drawable="@drawable/ic_gear" />
+    <item
+        android:width="84dp"
+        android:height="84dp"
+        android:end="96dp"
+        android:gravity="top|end"
+        android:top="64dp"
+        android:drawable="@drawable/ic_gear" />
+</layer-list>

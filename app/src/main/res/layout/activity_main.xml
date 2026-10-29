@@ -24,8 +24,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/app_name"
-                android:textColor="#FFFFFF"
-                android:textSize="44sp"
+                android:textColor="#F0D79A"
+                android:textSize="46sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -34,7 +34,7 @@
                 android:layout_marginTop="4dp"
                 android:alpha="0.92"
                 android:text="@string/home_subtitle"
-                android:textColor="#FFFFFF"
+                android:textColor="#EBDDBF"
                 android:textSize="15sp" />
         </LinearLayout>
 
@@ -82,9 +82,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/tile_uma_title"
-                        android:textColor="#FFFFFF"
                         android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:fontFamily="@font/cinzel_decorative"
+                        android:textColor="#F0D79A" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -92,7 +92,7 @@
                         android:layout_marginTop="2dp"
                         android:alpha="0.92"
                         android:text="@string/tile_uma_hint"
-                        android:textColor="#FFFFFF"
+                        android:textColor="#EBDDBF"
                         android:textSize="13sp" />
                 </LinearLayout>
 
@@ -101,7 +101,7 @@
                     android:layout_height="wrap_content"
                     android:alpha="0.8"
                     android:text="›"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#EBDDBF"
                     android:textSize="30sp" />
             </LinearLayout>
 
@@ -125,7 +125,7 @@
                     android:background="@drawable/icon_frame"
                     android:gravity="center"
                     android:text="文A"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#EBDDBF"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -134,9 +134,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="@string/tile_screen_title"
-                    android:textColor="#FFFFFF"
                     android:textSize="17sp"
-                    android:textStyle="bold" />
+                    android:fontFamily="@font/cinzel_decorative"
+                    android:textColor="#F0D79A" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -144,7 +144,7 @@
                     android:layout_marginTop="2dp"
                     android:alpha="0.92"
                     android:text="@string/tile_screen_hint"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#EBDDBF"
                     android:textSize="13sp" />
             </LinearLayout>
 
@@ -168,7 +168,7 @@
                     android:background="@drawable/icon_frame"
                     android:gravity="center"
                     android:text="🔗"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#EBDDBF"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
@@ -177,9 +177,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="@string/tile_web_title"
-                    android:textColor="#FFFFFF"
                     android:textSize="17sp"
-                    android:textStyle="bold" />
+                    android:fontFamily="@font/cinzel_decorative"
+                    android:textColor="#F0D79A" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -187,7 +187,7 @@
                     android:layout_marginTop="2dp"
                     android:alpha="0.92"
                     android:text="@string/tile_web_hint"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#EBDDBF"
                     android:textSize="13sp" />
             </LinearLayout>
 
@@ -225,9 +225,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/tile_live_title"
-                        android:textColor="#FFFFFF"
                         android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:fontFamily="@font/cinzel_decorative"
+                        android:textColor="#F0D79A" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -235,7 +235,7 @@
                         android:layout_marginTop="2dp"
                         android:alpha="0.92"
                         android:text="@string/tile_live_hint"
-                        android:textColor="#FFFFFF"
+                        android:textColor="#EBDDBF"
                         android:textSize="13sp" />
                 </LinearLayout>
 
@@ -244,7 +244,7 @@
                     android:layout_height="wrap_content"
                     android:alpha="0.8"
                     android:text="›"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#EBDDBF"
                     android:textSize="30sp" />
             </LinearLayout>
         </GridLayout>

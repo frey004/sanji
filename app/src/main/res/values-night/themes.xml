@@ -3,18 +3,27 @@
     <style name="AppTheme" parent="android:Theme.Material.NoActionBar">
         <item name="android:colorPrimary">@color/sanji_primary</item>
         <item name="android:colorPrimaryDark">@color/sanji_primary</item>
-        <item name="android:colorAccent">#A29BFE</item>
+        <item name="android:colorAccent">#C9A45C</item>
         <item name="android:windowBackground">@color/bg</item>
         <item name="android:textColorPrimary">@color/text</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
         <item name="android:statusBarColor">@color/bg</item>
         <item name="android:navigationBarColor">@color/bg</item>
         <item name="android:alertDialogTheme">@style/SanjiDialog</item>
+        <item name="android:textViewStyle">@style/Sanji.Text</item>
+        <item name="android:radioButtonStyle">@style/Sanji.Radio</item>
+        <item name="android:switchStyle">@style/Sanji.Switch</item>
+        <item name="android:checkboxStyle">@style/Sanji.Check</item>
+        <item name="android:editTextStyle">@style/Sanji.Edit</item>
     </style>
 
     <style name="SanjiDialog" parent="android:Theme.Material.Dialog.Alert">
-        <item name="android:colorAccent">#A29BFE</item>
+        <item name="android:colorAccent">#C9A45C</item>
         <item name="android:windowBackground">@drawable/dialog_bg</item>
         <item name="android:textColorPrimary">@color/text</item>
+        <item name="android:textViewStyle">@style/Sanji.Text</item>
+        <item name="android:radioButtonStyle">@style/Sanji.Radio</item>
+        <item name="android:checkboxStyle">@style/Sanji.Check</item>
+        <item name="android:editTextStyle">@style/Sanji.Edit</item>
     </style>
 </resources>

@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Modo oscuro: los mismos acentos sobre fondos oscuros. -->
-    <color name="bg">#121018</color>
-    <color name="surface">#1E1B27</color>
-    <color name="field">#2A2634</color>
-    <color name="outline">#302B3D</color>
-    <color name="text">#F3F1FA</color>
-    <color name="text_secondary">#A9A5BA</color>
-    <color name="status">#A29BFE</color>
+    <!-- Modo oscuro: cuero y madera oscura con el mismo latón. -->
+    <color name="sanji_primary">#C9A45C</color>
+    <color name="bg">#17110C</color>
+    <color name="surface">#241A12</color>
+    <color name="field">#33261A</color>
+    <color name="outline">#7A5C33</color>
+    <color name="text">#EBDDBF</color>
+    <color name="text_secondary">#BFA67E</color>
+    <color name="status">#17110C</color>
 </resources>

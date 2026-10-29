@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Colores de さんじ: violeta y rosa. -->
-    <color name="sanji_primary">#6C5CE7</color>
-    <color name="sanji_accent">#FD79A8</color>
+    <!-- Paleta victoriana / steampunk: latón, cobre, madera y pergamino. -->
+    <color name="sanji_primary">#8C6239</color>
+    <color name="sanji_accent">#B87333</color>
+    <color name="brass">#C9A45C</color>
+    <color name="brass_dark">#8C6239</color>
+    <color name="wood_dark">#2B1E14</color>
     <color name="launcher_bg">#BDEB86</color>
 
-    <color name="bg">#F6F5FB</color>
-    <color name="surface">#FFFFFF</color>
-    <color name="field">#F1EFF8</color>
-    <color name="outline">#E6E3F1</color>
-    <color name="text">#1E1B2E</color>
-    <color name="text_secondary">#6B6880</color>
-    <color name="status">#6C5CE7</color>
+    <color name="bg">#E9DABD</color>
+    <color name="surface">#F6ECD6</color>
+    <color name="field">#EBDDBD</color>
+    <color name="outline">#B08D57</color>
+    <color name="text">#3B2A1A</color>
+    <color name="text_secondary">#6E5236</color>
+    <color name="status">#2B1E14</color>
 </resources>

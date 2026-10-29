@@ -15,7 +15,7 @@ class ScreenActivity : BubbleActivity() {
         setContentView(R.layout.activity_screen)
         setupHeader(
             R.string.tile_screen_title, R.string.screen_subtitle, R.drawable.header_screen,
-            Color.rgb(0, 184, 148), emoji = "文A",
+            Color.rgb(22, 48, 42), emoji = "文A",
         )
         setupBubbleControls()
 
