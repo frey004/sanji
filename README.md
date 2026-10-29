@@ -12,10 +12,19 @@ Requiere Android 8.0 o superior.
 
 ## Uso
 
+La pantalla de inicio tiene un cuadro por cada modo; al tocarlo se abre su
+propia pantalla con sus ajustes:
+
+- **Uma Musume** (cuadro rosa, con el icono del juego si está instalado).
+- **Pantalla en vivo** (cuadro verde).
+- **Enlaces web** (cuadro azul).
+
+Debajo está el apartado de **Actualizaciones**.
+
 ### Traducir una página web
 
-1. Elige el idioma de la página y el idioma al que traducir.
-2. Pega el enlace en **Traducir una página web** y pulsa **Abrir y traducir**
+1. Toca el cuadro **Enlaces web**.
+2. Pega el enlace, elige el idioma de la página y al que traducir, y pulsa **Abrir y traducir**
    (si escribes algo que no es un enlace, se busca en Google).
 3. La página se abre dentro de la app ya traducida. Puedes seguir navegando por
    sus enlaces: cada página nueva, y el contenido que se carga al hacer scroll,
@@ -32,7 +41,7 @@ Sección dedicada al juego **Uma Musume Pretty Derby** (versión japonesa):
 1. Elige en «Traducir a» el idioma al que traducir.
 2. Ajusta la **opacidad del fondo de los subtítulos**: son claros y translúcidos,
    a juego con los cuadros del juego, en lugar de recuadros negros.
-3. Pulsa **Iniciar modo Uma Musume**. Si el juego está instalado, se abre solo.
+3. Desde el cuadro **Uma Musume**, pulsa **Iniciar modo Uma Musume**. Si el juego está instalado, se abre solo.
 4. El tiempo real ya viene activado (burbuja **ウマ**):
    - Traduce solo **diálogos, opciones de selección y menús**; ignora números,
      estadísticas, monedas y contadores.

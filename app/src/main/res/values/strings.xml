@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Traductor de Pantalla</string>
-    <string name="intro">Traduce páginas web a partir de su enlace, o el texto de cualquier app, juego o imagen directamente sobre la pantalla.</string>
     <string name="source_label">Idioma del texto en pantalla</string>
     <string name="target_label">Traducir a</string>
     <string name="start">Iniciar burbuja</string>
     <string name="stop">Detener</string>
     <string name="howto">Cómo se usa:\n\n• Toca la burbuja 文A para traducir lo que hay en pantalla.\n• Vuelve a tocarla para quitar la traducción.\n• Mantenla pulsada para activar/desactivar el modo tiempo real (la burbuja se pone verde y la traducción se actualiza sola).\n• Arrástrala para moverla.\n\nLa primera vez se descarga el idioma (~30 MB); después funciona sin internet.</string>
-    <string name="web_section">Traducir una página web</string>
     <string name="web_section_hint">Pega el enlace de la página (novela, noticia, foro…) y se abrirá ya traducida.</string>
     <string name="web_url_hint">https://… o texto a buscar</string>
     <string name="web_open">Abrir y traducir</string>
@@ -16,12 +14,21 @@
     <string name="web_share_label">Traducir página</string>
     <string name="web_show_original">Ver original</string>
     <string name="web_show_translation">Ver traducción</string>
-    <string name="uma_section">Uma Musume</string>
-    <string name="uma_section_hint">Modo especial para la versión japonesa del juego: traduce solo los diálogos, las opciones de selección y los menús (sin números ni estadísticas), espera a que cada diálogo termine de escribirse y usa subtítulos claros y translúcidos. El idioma de destino es el de «Traducir a».</string>
+    <string name="uma_section_hint">Modo especial para la versión japonesa del juego: traduce solo los diálogos, las opciones de selección y los menús (sin números ni estadísticas), espera a que cada diálogo termine de escribirse y usa subtítulos claros y translúcidos.</string>
     <string name="uma_opacity_label">Opacidad del fondo de los subtítulos: %1$d %%</string>
     <string name="uma_start">Iniciar modo Uma Musume</string>
-    <string name="screen_section">Traducción en vivo de la pantalla</string>
     <string name="update_section">Actualizaciones</string>
     <string name="update_version">Versión instalada: %1$s</string>
     <string name="update_check">Buscar actualizaciones</string>
+    <string name="home_title">¿Qué quieres traducir?</string>
+    <string name="tile_uma_title">Uma Musume</string>
+    <string name="tile_uma_hint">Diálogos, opciones y menús del juego</string>
+    <string name="tile_screen_title">Pantalla en vivo</string>
+    <string name="tile_screen_hint">Cualquier app, juego o imagen</string>
+    <string name="tile_web_title">Enlaces web</string>
+    <string name="tile_web_hint">Abre una página ya traducida</string>
+    <string name="screen_intro">Traduce el texto de cualquier app, juego o imagen directamente sobre la pantalla.</string>
+    <string name="web_source_label">Idioma de la página</string>
+    <string name="web_howto">Puedes seguir navegando por los enlaces de la página: cada página nueva, y el contenido que se carga al hacer scroll, se traduce sola. Con «Ver original» cambias entre el texto original y el traducido.\n\nTambién puedes compartir un enlace desde Chrome u otra app y elegir «Traducir página».</string>
+    <string name="uma_howto">Cómo se usa:\n\n• Al iniciar se abre el juego con la burbuja ウマ y el tiempo real ya activado.\n• Toca la burbuja para forzar una traducción.\n• Mantenla pulsada para pausar o reanudar el tiempo real.\n• Arrástrala para moverla.\n\nLos cambios de idioma y opacidad se aplican al momento.</string>
 </resources>
