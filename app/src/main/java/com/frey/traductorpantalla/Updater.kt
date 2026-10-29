@@ -17,7 +17,7 @@ data class Release(val versionCode: Int, val versionName: String, val notes: Str
 
 /** Busca nuevas versiones en las publicaciones de GitHub, las descarga e instala. */
 object Updater {
-    private const val LATEST_RELEASE = "https://api.github.com/repos/frey004/skynovels/releases/latest"
+    private const val LATEST_RELEASE = "https://api.github.com/repos/frey004/sanji/releases/latest"
 
     /** Devuelve la última versión publicada si es más nueva que la instalada. */
     suspend fun checkForUpdate(): Release? = withContext(Dispatchers.IO) {
