@@ -77,7 +77,13 @@ La voz se reconoce en el propio móvil, sin internet:
 - Francés, alemán, italiano, portugués, español, vietnamita e hindi:
   [Vosk](https://alphacephei.com/vosk/) (40-80 MB por idioma).
 
+La traducción usa por defecto **Google Translate en línea**, que traduce el
+japonés mucho mejor; si no hay internet o tarda, se usa la traducción sin
+conexión. Se puede desactivar con «Traducción en línea».
+
 Algunas apps no permiten capturar su sonido; en ese caso usa la opción «Micrófono».
+Si la captura de audio o el reconocimiento dejan de responder, la app los
+reinicia sola («Reconectando el audio…»).
 
 ### Traducción en vivo de la pantalla
 

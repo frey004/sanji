@@ -14,6 +14,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.RadioButton
 import android.widget.Spinner
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -62,6 +63,10 @@ class LiveActivity : ComponentActivity() {
         setupSpinner(findViewById(R.id.targetSpinner), Languages.targets, Languages.target(this)) {
             if (it != Languages.target(this)) Languages.save(this, Languages.source(this), it)
         }
+
+        val online = findViewById<Switch>(R.id.onlineSwitch)
+        online.isChecked = LiveCaptions.onlineTranslation(this)
+        online.setOnCheckedChangeListener { _, checked -> LiveCaptions.saveOnlineTranslation(this, checked) }
 
         val appAudio = findViewById<RadioButton>(R.id.sourceAppAudio)
         val microphone = findViewById<RadioButton>(R.id.sourceMicrophone)

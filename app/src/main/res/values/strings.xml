@@ -50,4 +50,6 @@
     <string name="live_howto">Cómo se usa:\n\n• Pulsa Iniciar, acepta los permisos y abre el directo.\n• Arriba aparece en blanco lo ya traducido y en gris lo que se está diciendo.\n• Arrastra el recuadro para moverlo.\n• Para quitarlo: Detener aquí o en la notificación.\n\nLa primera vez se descarga el reconocimiento de voz (unos 170 MB para japonés, chino, coreano e inglés; 40-80 MB para los demás idiomas); después funciona sin internet.\n\nAlgunas apps no dejan capturar su sonido: si el recuadro dice «Sin sonido», usa «Micrófono» con el volumen alto.</string>
     <string name="live_auto">Detectar automáticamente (japonés, chino, coreano o inglés)</string>
     <string name="live_auto_hint">Distingue solo entre japonés, chino, coreano e inglés, y cambia sola si el directo cambia de idioma. Arriba del recuadro pone qué idioma está oyendo.</string>
+    <string name="live_online">Traducción en línea (mejor calidad)</string>
+    <string name="live_online_hint">Usa Google Translate por internet, que traduce mucho mejor el japonés. Si no hay conexión, traduce sin internet automáticamente.</string>
 </resources>

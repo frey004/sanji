@@ -38,6 +38,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -62,6 +63,10 @@ class LiveCaptionService : Service() {
         private const val SILENCE_HINT_MS = 8000L
         /** Trozos separados por menos de esto se traducen juntos, como una sola frase. */
         private const val SENTENCE_GAP_MS = 1500L
+        /** Sin audio durante este tiempo, se vuelve a abrir la captura. */
+        private const val AUDIO_STALL_MS = 4000L
+        /** Si el reconocimiento no da señales durante este tiempo, se reinicia. */
+        private const val ENGINE_STALL_MS = 8000L
 
         @Volatile
         var isRunning = false
@@ -72,8 +77,15 @@ class LiveCaptionService : Service() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private lateinit var windowManager: WindowManager
 
+    @Volatile
     private var engine: SpeechEngine? = null
+    private var useMic = false
+    private lateinit var callback: SpeechCallback
+    /** Última lectura de audio correcta (la vigila el perro guardián). */
+    @Volatile
+    private var audioBeat = 0L
     private var autoDetect = false
+    private var onlineTranslation = true
     /** Un traductor por cada idioma que se puede oír (en automático, varios). */
     private val translators = HashMap<String, Translator?>()
     /** Último idioma detectado, para indicarlo en el recuadro. */
@@ -113,7 +125,7 @@ class LiveCaptionService : Service() {
         }
         if (isRunning) return START_NOT_STICKY
 
-        val useMic = LiveCaptions.useMicrophone(this) || Build.VERSION.SDK_INT < 29
+        useMic = LiveCaptions.useMicrophone(this) || Build.VERSION.SDK_INT < 29
         val type = when {
             Build.VERSION.SDK_INT < 30 -> 0
             useMic -> ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
@@ -139,6 +151,7 @@ class LiveCaptionService : Service() {
         isRunning = true
         windowManager = getSystemService(WindowManager::class.java)
         autoDetect = LiveCaptions.autoDetect(this)
+        onlineTranslation = LiveCaptions.onlineTranslation(this)
         addCaptionBox()
         showPartial("Cargando el reconocimiento de voz…")
 
@@ -151,21 +164,15 @@ class LiveCaptionService : Service() {
                     translators[language.code] = translator
                 }
                 val source = LiveCaptions.source(this@LiveCaptionService)
-                val callback: SpeechCallback = { text, detected, isFinal ->
+                callback = { text, detected, isFinal ->
                     // Con un idioma elegido, ese es el idioma aunque el motor diga otra cosa.
                     val code = if (autoDetect) detected else source.code
                     post { if (isFinal) onFinal(text, code) else onPartial(text, code) }
                 }
-                engine = withContext(Dispatchers.IO) {
-                    when {
-                        autoDetect -> SenseVoiceEngine(this@LiveCaptionService, "", callback)
-                        LiveCaptions.usesSenseVoice(this@LiveCaptionService) ->
-                            SenseVoiceEngine(this@LiveCaptionService, source.code, callback)
-                        else -> VoskEngine(LiveCaptions.modelDir(this@LiveCaptionService, source), source, callback)
-                    }
-                }
-                startListening(useMic)
+                engine = createEngine()
+                startListening()
                 showPartial(if (autoDetect) "Escuchando… detectando el idioma" else "Escuchando…")
+                watchdog()
             } catch (e: Exception) {
                 Toast.makeText(this@LiveCaptionService, "No se pudo iniciar: ${e.message}", Toast.LENGTH_LONG).show()
                 stopSelf()
@@ -176,8 +183,51 @@ class LiveCaptionService : Service() {
 
     // ---------------------------------------------------------------- audio y voz
 
+    private suspend fun createEngine(): SpeechEngine = withContext(Dispatchers.IO) {
+        val source = LiveCaptions.source(this@LiveCaptionService)
+        when {
+            autoDetect -> SenseVoiceEngine(this@LiveCaptionService, "", callback)
+            LiveCaptions.usesSenseVoice(this@LiveCaptionService) ->
+                SenseVoiceEngine(this@LiveCaptionService, source.code, callback)
+            else -> VoskEngine(LiveCaptions.modelDir(this@LiveCaptionService, source), source, callback)
+        }
+    }
+
+    /**
+     * Perro guardián: si la captura de audio deja de dar datos (p. ej. la app
+     * del directo cambia de reproductor) o el reconocimiento se cuelga, los
+     * vuelve a poner en marcha en vez de dejar el subtítulo congelado.
+     */
+    private fun watchdog() = scope.launch {
+        while (true) {
+            delay(2000)
+            val now = System.currentTimeMillis()
+            if (now - audioBeat > AUDIO_STALL_MS) {
+                showPartial("Reconectando el audio…")
+                stopListening()
+                runCatching { startListening() }
+            } else if (now - (engine?.lastActivity ?: now) > ENGINE_STALL_MS) {
+                showPartial("Reiniciando el reconocimiento de voz…")
+                val stuck = engine
+                engine = null
+                withContext(Dispatchers.IO) { stuck?.close() }
+                engine = runCatching { createEngine() }.getOrNull()
+            }
+        }
+    }
+
+    private fun stopListening() {
+        listening = false
+        // Parar la grabación despierta al hilo si está esperando datos.
+        audioRecord?.let { runCatching { it.stop() } }
+        audioThread?.join(1000)
+        audioThread = null
+        audioRecord?.release()
+        audioRecord = null
+    }
+
     @SuppressLint("MissingPermission") // El permiso de grabar audio se pide antes de iniciar.
-    private fun startListening(useMic: Boolean) {
+    private fun startListening() {
         val format = AudioFormat.Builder()
             .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
             .setSampleRate(SAMPLE_RATE)
@@ -202,35 +252,39 @@ class LiveCaptionService : Service() {
             builder.setAudioSource(MediaRecorder.AudioSource.VOICE_RECOGNITION)
         }
         val record = builder.build()
-        if (record.state != AudioRecord.STATE_INITIALIZED) throw IllegalStateException("no se pudo abrir el audio")
-        val engine = engine ?: throw IllegalStateException("sin reconocimiento de voz")
+        if (record.state != AudioRecord.STATE_INITIALIZED) {
+            record.release()
+            throw IllegalStateException("no se pudo abrir el audio")
+        }
         audioRecord = record
         listening = true
+        audioBeat = System.currentTimeMillis()
         record.startRecording()
 
         audioThread = Thread({
             val buffer = ShortArray(SAMPLE_RATE / 10)
             var lastSound = System.currentTimeMillis()
             var hinted = false
-            try {
-                while (listening) {
-                    val n = record.read(buffer, 0, buffer.size)
-                    if (n <= 0) continue
-                    if ((0 until n).any { abs(buffer[it].toInt()) > 60 }) {
-                        lastSound = System.currentTimeMillis()
-                        hinted = false
-                    } else if (!hinted && System.currentTimeMillis() - lastSound > SILENCE_HINT_MS) {
-                        hinted = true
-                        post { if (lines.isEmpty()) showPartial(silenceHint(useMic)) }
-                    }
-                    try {
-                        engine.accept(buffer, n)
-                    } catch (e: Exception) {
-                        // Un fallo con un trozo de audio no puede detener los subtítulos.
-                    }
+            while (listening) {
+                val n = record.read(buffer, 0, buffer.size)
+                if (n <= 0) {
+                    // Error de la captura: el perro guardián la volverá a abrir.
+                    Thread.sleep(50)
+                    continue
                 }
-            } finally {
-                engine.close()
+                audioBeat = System.currentTimeMillis()
+                if ((0 until n).any { abs(buffer[it].toInt()) > 60 }) {
+                    lastSound = System.currentTimeMillis()
+                    hinted = false
+                } else if (!hinted && System.currentTimeMillis() - lastSound > SILENCE_HINT_MS) {
+                    hinted = true
+                    post { if (lines.isEmpty()) showPartial(silenceHint(useMic)) }
+                }
+                try {
+                    engine?.accept(buffer, n)
+                } catch (e: Exception) {
+                    // Un fallo con un trozo de audio no puede detener los subtítulos.
+                }
             }
         }, "subtitulos").apply { start() }
     }
@@ -245,8 +299,12 @@ class LiveCaptionService : Service() {
         mainHandler.post { if (isRunning) block() }
     }
 
+    /** En línea si está activado (traduce mejor); si falla, con el modelo sin conexión. */
     private fun translate(text: String, code: String) = scope.async {
         val translator = translators[code] ?: return@async text
+        if (onlineTranslation) {
+            OnlineTranslator.translate(text, code, Languages.target(this@LiveCaptionService).code)?.let { return@async it }
+        }
         runCatching { translator.translate(text).await() }.getOrDefault(text)
     }
 
@@ -438,17 +496,11 @@ class LiveCaptionService : Service() {
 
     override fun onDestroy() {
         isRunning = false
-        listening = false
         scope.cancel()
         box?.let { runCatching { windowManager.removeView(it) } }
-        // Esperar a que el hilo suelte el reconocedor antes de liberar el modelo.
-        audioThread?.join(1000)
-        audioRecord?.let {
-            runCatching { it.stop() }
-            it.release()
-        }
-        // Si el hilo de audio no llegó a arrancar, el motor se cierra aquí.
-        if (audioThread == null) engine?.close()
+        // Primero el audio, para que nadie siga usando el motor al cerrarlo.
+        stopListening()
+        engine?.close()
         translators.values.forEach { it?.close() }
         projection?.stop()
         super.onDestroy()

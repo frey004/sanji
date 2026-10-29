@@ -23,6 +23,9 @@ interface SpeechEngine {
     fun accept(samples: ShortArray, n: Int)
     fun close()
 
+    /** Última vez que el motor dio señales de vida (para detectar si se ha colgado). */
+    val lastActivity: Long
+
     companion object {
         const val SAMPLE_RATE = 16000
     }
@@ -86,7 +89,8 @@ class SenseVoiceEngine(
                     useInverseTextNormalization = true,
                 ),
                 tokens = File(LiveCaptions.senseVoiceDir(context), "tokens.txt").path,
-                numThreads = 2,
+                // Más núcleos, menos retraso: hasta 4 en móviles de 8 núcleos.
+                numThreads = (Runtime.getRuntime().availableProcessors() / 2).coerceIn(2, 4),
             ),
         ),
     )
@@ -104,6 +108,9 @@ class SenseVoiceEngine(
     private val queue = LinkedBlockingQueue<FloatArray>()
     @Volatile
     private var running = true
+    @Volatile
+    override var lastActivity = System.currentTimeMillis()
+        private set
     private val worker = Thread({ work() }, "sensevoice").apply { start() }
 
     override fun accept(samples: ShortArray, n: Int) {
@@ -113,6 +120,7 @@ class SenseVoiceEngine(
     private fun work() {
         try {
             while (running) {
+                lastActivity = System.currentTimeMillis()
                 val chunk = queue.poll(200, TimeUnit.MILLISECONDS) ?: continue
                 if (queue.size > MAX_BACKLOG) {
                     queue.clear()
@@ -225,8 +233,12 @@ class VoskEngine(
     private val model = Model(modelDir.path)
     private val recognizer = Recognizer(model, SpeechEngine.SAMPLE_RATE.toFloat())
     private var lastPartial = ""
+    @Volatile
+    override var lastActivity = System.currentTimeMillis()
+        private set
 
     override fun accept(samples: ShortArray, n: Int) {
+        lastActivity = System.currentTimeMillis()
         if (recognizer.acceptWaveForm(samples, n)) {
             emitFinal(JSONObject(recognizer.result).optString("text"))
             return
