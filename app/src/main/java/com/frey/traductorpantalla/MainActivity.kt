@@ -33,6 +33,7 @@ class MainActivity : ComponentActivity() {
 
         findViewById<View>(R.id.tileUma).setOnClickListener { startActivity(Intent(this, UmaActivity::class.java)) }
         findViewById<View>(R.id.tileScreen).setOnClickListener { startActivity(Intent(this, ScreenActivity::class.java)) }
+        findViewById<View>(R.id.tileLive).setOnClickListener { startActivity(Intent(this, LiveActivity::class.java)) }
         findViewById<View>(R.id.tileWeb).setOnClickListener { startActivity(Intent(this, WebTranslateActivity::class.java)) }
         // Esquinas redondeadas según el fondo del icono.
         findViewById<ImageView>(R.id.umaIcon).clipToOutline = true

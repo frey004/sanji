@@ -70,4 +70,7 @@ dependencies {
     implementation("com.google.mlkit:text-recognition-devanagari:16.0.1")
     // Traducción sin conexión (descarga cada idioma una sola vez, ~30 MB).
     implementation("com.google.mlkit:translate:17.0.3")
+    // Reconocimiento de voz sin conexión para los subtítulos de directos.
+    implementation("com.alphacephei:vosk-android:0.3.47@aar")
+    implementation("net.java.dev.jna:jna:5.13.0@aar")
 }

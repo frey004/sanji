@@ -110,6 +110,10 @@ abstract class BubbleActivity : ComponentActivity() {
     }
 
     private fun onStartClicked() {
+        if (LiveCaptionService.isRunning) {
+            Toast.makeText(this, "Detén primero los subtítulos de directos", Toast.LENGTH_LONG).show()
+            return
+        }
         if (TranslatorService.isRunning) {
             if (TranslatorService.gameMode != gameMode) {
                 Toast.makeText(this, "Hay otro modo activo: pulsa Detener antes de cambiar", Toast.LENGTH_LONG).show()

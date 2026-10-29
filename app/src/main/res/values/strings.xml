@@ -39,4 +39,13 @@
     <string name="download_epub">EPUB</string>
     <string name="download_txt">Solo texto (.txt)</string>
     <string name="download_translate_images">Traducir el texto de las imágenes</string>
+    <string name="tile_live_title">Directos</string>
+    <string name="tile_live_hint">Subtítulos traducidos de lo que se dice</string>
+    <string name="live_intro">Muestra un recuadro negro con la traducción de lo que se dice en un directo o vídeo de otra app (YouTube, Twitch, TikTok…).</string>
+    <string name="live_source_label">Idioma que se habla en el directo</string>
+    <string name="live_audio_label">Qué escuchar</string>
+    <string name="live_audio_app">Audio del directo (dentro del móvil, Android 10+)</string>
+    <string name="live_audio_mic">Micrófono</string>
+    <string name="live_start">Iniciar subtítulos</string>
+    <string name="live_howto">Cómo se usa:\n\n• Pulsa Iniciar, acepta los permisos y abre el directo.\n• Arriba aparece en blanco lo ya traducido y en gris lo que se está diciendo.\n• Arrastra el recuadro para moverlo.\n• Para quitarlo: Detener aquí o en la notificación.\n\nLa primera vez se descarga la voz del idioma (40-80 MB); después funciona sin internet.\n\nAlgunas apps no dejan capturar su sonido: si el recuadro dice «Sin sonido», usa «Micrófono» con el volumen alto.</string>
 </resources>

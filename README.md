@@ -56,6 +56,21 @@ Sección dedicada al juego **Uma Musume Pretty Derby** (versión japonesa):
 
 Los cambios de opacidad se aplican al momento, sin reiniciar la burbuja.
 
+### Directos
+
+Subtítulos traducidos de lo que se **dice** en un directo o vídeo de otra app:
+
+1. Toca el cuadro **Directos**, elige el idioma que se habla y al que traducir.
+2. Elige qué escuchar: el **audio del directo** dentro del móvil (Android 10+)
+   o el **micrófono**.
+3. Pulsa **Iniciar subtítulos** y abre el directo. Aparece un recuadro negro
+   (se puede arrastrar) con la traducción: en blanco las frases terminadas y en
+   gris lo que se está diciendo.
+
+La voz se reconoce en el propio móvil con [Vosk](https://alphacephei.com/vosk/):
+la primera vez se descarga el modelo del idioma (40-80 MB). Algunas apps no
+permiten capturar su sonido; en ese caso usa la opción «Micrófono».
+
 ### Traducción en vivo de la pantalla
 
 1. Elige el idioma del texto (inglés, japonés, chino, coreano…) y el idioma al que traducir.
