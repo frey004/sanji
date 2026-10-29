@@ -37,7 +37,7 @@ object Updater {
         withContext(Dispatchers.IO) {
             val dir = File(context.cacheDir, "updates").apply { mkdirs() }
             dir.listFiles()?.forEach { it.delete() }
-            val file = File(dir, "TraductorPantalla-${release.versionName}.apk")
+            val file = File(dir, "Sanji-${release.versionName}.apk")
             val connection = open(release.apkUrl)
             val total = connection.contentLengthLong
             connection.inputStream.use { input ->

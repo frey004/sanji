@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "TraductorPantalla"
+rootProject.name = "Sanji"
 include(":app")

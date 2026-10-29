@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Traductor de Pantalla</string>
+    <string name="app_name">さんじ</string>
     <string name="source_label">Idioma del texto en pantalla</string>
     <string name="target_label">Traducir a</string>
     <string name="start">Iniciar burbuja</string>

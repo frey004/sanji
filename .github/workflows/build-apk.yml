@@ -38,21 +38,21 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon --stacktrace
-          cp app/build/outputs/apk/release/app-release.apk TraductorPantalla.apk
+          cp app/build/outputs/apk/release/app-release.apk Sanji.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: TraductorPantalla
-          path: TraductorPantalla.apk
+          name: Sanji
+          path: Sanji.apk
 
       - name: Publicar descarga
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: Traductor de Pantalla v1.0.${{ github.run_number }}
+          name: さんじ v1.0.${{ github.run_number }}
           target_commitish: ${{ github.sha }}
           make_latest: true
-          files: TraductorPantalla.apk
+          files: Sanji.apk
           body: |
-            Descarga **TraductorPantalla.apk** desde el móvil e instálalo
+            Descarga **Sanji.apk** desde el móvil e instálalo
             (permite «Instalar apps desconocidas» si Android lo pide).

@@ -1,11 +1,11 @@
-# Traductor de Pantalla (Android)
+# さんじ (Android)
 
 App Android que traduce **páginas web a partir de su enlace** y, además, traduce en tiempo real el texto de **cualquier app, juego, manga o vídeo**,
 dibujando la traducción encima del texto original (estilo Google Lens).
 
 ## Descargar
 
-👉 **[Descargar el APK](../../releases/latest/download/TraductorPantalla.apk)** (última versión)
+👉 **[Descargar el APK](../../releases/latest/download/Sanji.apk)** (última versión)
 
 Instálalo en el móvil; si Android lo pide, permite «Instalar apps desconocidas».
 Requiere Android 8.0 o superior.
