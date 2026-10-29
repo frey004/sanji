@@ -12,6 +12,8 @@ import org.json.JSONObject
 import org.vosk.Model
 import org.vosk.Recognizer
 import java.io.File
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 
 /** Texto reconocido: [languageCode] es el idioma detectado; [isFinal], si la frase terminó. */
 typealias SpeechCallback = (text: String, languageCode: String, isFinal: Boolean) -> Unit
@@ -30,7 +32,11 @@ interface SpeechEngine {
  * SenseVoice (sherpa-onnx): japonés, chino, coreano e inglés, con detección
  * del idioma. No es de flujo continuo, así que un detector de voz (Silero)
  * separa las frases y, mientras alguien habla, se vuelve a reconocer lo dicho
- * cada medio segundo para ir mostrando el texto.
+ * para ir mostrando el texto.
+ *
+ * El reconocimiento va en su propio hilo: el de audio solo encola. Si el móvil
+ * no da abasto se saltan los textos provisionales y, si aun así se acumula
+ * mucho retraso, se descarta lo atrasado para volver al presente.
  */
 class SenseVoiceEngine(
     context: Context,
@@ -43,7 +49,11 @@ class SenseVoiceEngine(
         private const val WINDOW = 512
         /** Al empezar a hablar se incluye también lo de justo antes (0,4 s). */
         private const val LEAD_IN = 6400
-        private const val PARTIAL_EVERY_MS = 500L
+        private const val PARTIAL_EVERY_MS = 600L
+        /** Con más audio pendiente que esto (en trozos de 0,1 s) no se hacen parciales. */
+        private const val MAX_BACKLOG_FOR_PARTIAL = 3
+        /** Con más de 8 s de retraso se descarta lo pendiente. */
+        private const val MAX_BACKLOG = 80
         /** A veces separa con espacios las palabras en japonés o chino, que no los llevan. */
         private val cjkSpaces = Regex("(?<=[\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}ー])\\s+(?=[\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}ー])")
     }
@@ -54,11 +64,13 @@ class SenseVoiceEngine(
             sileroVadModelConfig = SileroVadModelConfig(
                 model = "silero_vad.onnx",
                 threshold = 0.5f,
-                minSilenceDuration = 0.3f,
+                // Pausas más cortas que esto no cortan la frase: así no se
+                // traducen trozos sueltos cuando alguien habla deprisa.
+                minSilenceDuration = 0.5f,
                 minSpeechDuration = 0.25f,
                 windowSize = WINDOW,
                 // Las frases largas se cortan para que el subtítulo no tarde demasiado.
-                maxSpeechDuration = 8f,
+                maxSpeechDuration = 6f,
             ),
             sampleRate = SpeechEngine.SAMPLE_RATE,
             numThreads = 1,
@@ -86,10 +98,51 @@ class SenseVoiceEngine(
     /** Dónde empezó la frase actual, o -1 si nadie habla. */
     private var speechStart = -1
     private var lastDecode = 0L
+    /** Cuánto tardó el último reconocimiento provisional. */
+    private var lastDecodeCost = 0L
+
+    private val queue = LinkedBlockingQueue<FloatArray>()
+    @Volatile
+    private var running = true
+    private val worker = Thread({ work() }, "sensevoice").apply { start() }
 
     override fun accept(samples: ShortArray, n: Int) {
+        queue.offer(FloatArray(n) { samples[it] / 32768f })
+    }
+
+    private fun work() {
+        try {
+            while (running) {
+                val chunk = queue.poll(200, TimeUnit.MILLISECONDS) ?: continue
+                if (queue.size > MAX_BACKLOG) {
+                    queue.clear()
+                    reset()
+                    continue
+                }
+                try {
+                    process(chunk)
+                } catch (e: Exception) {
+                    // Un fallo puntual no puede detener los subtítulos.
+                    reset()
+                }
+            }
+        } finally {
+            recognizer.release()
+            vad.release()
+        }
+    }
+
+    private fun reset() {
+        vad.reset()
+        size = 0
+        offset = 0
+        speechStart = -1
+    }
+
+    private fun process(chunk: FloatArray) {
+        val n = chunk.size
         if (size + n > buffer.size) buffer = buffer.copyOf(maxOf(buffer.size * 2, size + n))
-        for (i in 0 until n) buffer[size + i] = samples[i] / 32768f
+        chunk.copyInto(buffer, size)
         size += n
 
         while (offset + WINDOW <= size) {
@@ -99,12 +152,6 @@ class SenseVoiceEngine(
                 speechStart = maxOf(0, offset - LEAD_IN)
                 lastDecode = System.currentTimeMillis()
             }
-        }
-
-        val now = System.currentTimeMillis()
-        if (speechStart >= 0 && now - lastDecode > PARTIAL_EVERY_MS) {
-            lastDecode = now
-            decode(buffer.copyOfRange(speechStart, offset))?.let { (text, lang) -> callback(text, lang, false) }
         }
 
         var finished = false
@@ -119,6 +166,16 @@ class SenseVoiceEngine(
         } else if (speechStart < 0 && offset > SpeechEngine.SAMPLE_RATE * 2) {
             // En silencio no hace falta guardar más que lo último.
             keepFrom(offset - LEAD_IN)
+        }
+
+        // Texto provisional mientras se habla, solo si el reconocimiento va al día.
+        val now = System.currentTimeMillis()
+        if (speechStart >= 0 && queue.size <= MAX_BACKLOG_FOR_PARTIAL &&
+            now - lastDecode > maxOf(PARTIAL_EVERY_MS, lastDecodeCost * 2)
+        ) {
+            decode(buffer.copyOfRange(speechStart, offset))?.let { (text, lang) -> callback(text, lang, false) }
+            lastDecode = System.currentTimeMillis()
+            lastDecodeCost = lastDecode - now
         }
     }
 
@@ -148,8 +205,8 @@ class SenseVoiceEngine(
     }
 
     override fun close() {
-        recognizer.release()
-        vad.release()
+        running = false
+        worker.join(2000)
     }
 }
 

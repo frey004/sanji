@@ -60,6 +60,8 @@ class LiveCaptionService : Service() {
         private const val SAMPLE_RATE = SpeechEngine.SAMPLE_RATE
         private const val PARTIAL_TRANSLATE_MS = 700L
         private const val SILENCE_HINT_MS = 8000L
+        /** Trozos separados por menos de esto se traducen juntos, como una sola frase. */
+        private const val SENTENCE_GAP_MS = 1500L
 
         @Volatile
         var isRunning = false
@@ -88,8 +90,15 @@ class LiveCaptionService : Service() {
     /** En modo automático, el idioma detectado («Japonés → Español»). */
     private var languageView: TextView? = null
     private var partialView: TextView? = null
-    /** Últimas frases ya traducidas. */
-    private val lines = ArrayDeque<String>()
+    /** Una línea del recuadro: el texto original (que puede ir creciendo) y su traducción. */
+    private class CaptionLine(var source: String, var text: String = "")
+
+    /** Últimas frases mostradas. */
+    private val lines = ArrayDeque<CaptionLine>()
+    private var lastFinalAt = 0L
+    private var lineCode = ""
+    /** Último idioma reconocido, para los trozos en los que el motor duda. */
+    private var lastCode = ""
     private var lastPartialTranslation = 0L
     private var translatingPartial = false
     /** Cuenta las frases terminadas: una traducción parcial que llega tarde no pisa la final. */
@@ -214,7 +223,11 @@ class LiveCaptionService : Service() {
                         hinted = true
                         post { if (lines.isEmpty()) showPartial(silenceHint(useMic)) }
                     }
-                    engine.accept(buffer, n)
+                    try {
+                        engine.accept(buffer, n)
+                    } catch (e: Exception) {
+                        // Un fallo con un trozo de audio no puede detener los subtítulos.
+                    }
                 }
             } finally {
                 engine.close()
@@ -246,24 +259,60 @@ class LiveCaptionService : Service() {
         languageView?.visibility = android.view.View.VISIBLE
     }
 
-    private fun onFinal(text: String, code: String) {
-        if (text.isEmpty()) return
-        // En automático, un idioma que no se puede traducir (p. ej. ruido) no se muestra.
-        if (code !in translators) return
+    /** Idioma con el que traducir lo reconocido, o null si no se puede. */
+    private fun usableCode(detected: String) = when {
+        detected in translators -> detected
+        lastCode.isNotEmpty() -> lastCode
+        else -> null
+    }
+
+    /**
+     * Junta los trozos que llegan seguidos en una sola frase y la traduce
+     * entera: traducidos por separado salen frases cortadas y sin sentido.
+     */
+    private fun onFinal(text: String, detected: String) {
         phrase++
-        scope.launch {
-            val translated = translate(text, code).await()
-            showLanguage(code)
-            lines.addLast(translated)
-            while (lines.size > 2) lines.removeFirst()
-            linesView?.text = lines.joinToString("\n")
+        val code = usableCode(detected)
+        if (text.isEmpty() || code == null) {
             showPartial("")
+            return
+        }
+        lastCode = code
+        val now = System.currentTimeMillis()
+        val last = lines.lastOrNull()
+        val maxLength = if (Languages.sources.firstOrNull { it.code == code }?.lineSeparator == "") 50 else 140
+        val line = if (last != null && code == lineCode && now - lastFinalAt < SENTENCE_GAP_MS &&
+            last.source.length < maxLength
+        ) {
+            val separator = if (Languages.sources.firstOrNull { it.code == code }?.lineSeparator == "") "" else " "
+            last.apply { source += separator + text }
+        } else {
+            CaptionLine(text).also {
+                lines.addLast(it)
+                while (lines.size > 2) lines.removeFirst()
+            }
+        }
+        lineCode = code
+        lastFinalAt = now
+        val source = line.source
+        val current = phrase
+        scope.launch {
+            val translated = translate(source, code).await()
+            // Si la frase siguió creciendo, ya llegará la traducción de la versión completa.
+            if (line.source == source) {
+                line.text = translated
+                linesView?.text = lines.filter { it.text.isNotEmpty() }.joinToString("\n") { it.text }
+                linesView?.visibility = android.view.View.VISIBLE
+            }
+            showLanguage(code)
+            if (current == phrase) showPartial("")
         }
     }
 
     /** Traduce lo que se está diciendo, como mucho cada [PARTIAL_TRANSLATE_MS]. */
-    private fun onPartial(text: String, code: String) {
-        if (text.isEmpty() || translatingPartial || code !in translators) return
+    private fun onPartial(text: String, detected: String) {
+        val code = usableCode(detected) ?: return
+        if (text.isEmpty() || translatingPartial) return
         val now = System.currentTimeMillis()
         if (now - lastPartialTranslation < PARTIAL_TRANSLATE_MS) return
         lastPartialTranslation = now
@@ -286,7 +335,7 @@ class LiveCaptionService : Service() {
     private fun showPartial(text: String) {
         partialView?.text = text
         partialView?.visibility = if (text.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE
-        linesView?.visibility = if (lines.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE
+        linesView?.visibility = if (lines.none { it.text.isNotEmpty() }) android.view.View.GONE else android.view.View.VISIBLE
     }
 
     @SuppressLint("ClickableViewAccessibility")
