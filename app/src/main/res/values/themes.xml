@@ -18,6 +18,9 @@
         <item name="android:textColorPrimary">@color/text</item>
     </style>
 
+    <!-- Base de los estilos «Sanji.*» (aapt exige que exista el padre implícito). -->
+    <style name="Sanji" />
+
     <!-- Tarjeta: fondo redondeado con borde suave. -->
     <style name="Sanji.Card">
         <item name="android:layout_width">match_parent</item>
