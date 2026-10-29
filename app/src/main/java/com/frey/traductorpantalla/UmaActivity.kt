@@ -1,7 +1,6 @@
 package com.frey.traductorpantalla
 
 import android.os.Bundle
-import android.view.View
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.Spinner
@@ -18,8 +17,7 @@ class UmaActivity : BubbleActivity() {
         setContentView(R.layout.activity_uma)
         setupBubbleControls()
 
-        val icon = findViewById<ImageView>(R.id.umaIcon)
-        UmaMusume.icon(this)?.let { icon.setImageDrawable(it) } ?: run { icon.visibility = View.GONE }
+        findViewById<ImageView>(R.id.umaIcon).clipToOutline = true
 
         setupLanguageSpinner(findViewById<Spinner>(R.id.targetSpinner), Languages.targets, Languages.target(this)) {
             if (it == Languages.target(this)) return@setupLanguageSpinner

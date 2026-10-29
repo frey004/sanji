@@ -3,7 +3,6 @@ package com.frey.traductorpantalla
 import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
-import android.graphics.drawable.Drawable
 import com.google.mlkit.nl.translate.TranslateLanguage
 
 /** Ajustes y filtros del modo dedicado a Uma Musume. */
@@ -27,10 +26,6 @@ object UmaMusume {
     }
 
     fun launchIntent(context: Context): Intent? = context.packageManager.getLaunchIntentForPackage(PACKAGE)
-
-    /** Icono del juego instalado, para mostrarlo en su cuadro; null si no está instalado. */
-    fun icon(context: Context): Drawable? =
-        runCatching { context.packageManager.getApplicationIcon(PACKAGE) }.getOrNull()
 
     /**
      * Deja pasar diálogos, opciones y menús, y descarta lo demás: estadísticas,

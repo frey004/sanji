@@ -34,10 +34,8 @@ class MainActivity : ComponentActivity() {
         findViewById<View>(R.id.tileUma).setOnClickListener { startActivity(Intent(this, UmaActivity::class.java)) }
         findViewById<View>(R.id.tileScreen).setOnClickListener { startActivity(Intent(this, ScreenActivity::class.java)) }
         findViewById<View>(R.id.tileWeb).setOnClickListener { startActivity(Intent(this, LinkActivity::class.java)) }
-        UmaMusume.icon(this)?.let {
-            findViewById<ImageView>(R.id.umaIcon).setImageDrawable(it)
-            findViewById<View>(R.id.umaIconFallback).visibility = View.GONE
-        }
+        // Esquinas redondeadas según el fondo del icono.
+        findViewById<ImageView>(R.id.umaIcon).clipToOutline = true
 
         findViewById<TextView>(R.id.versionText).text = getString(R.string.update_version, BuildConfig.VERSION_NAME)
         findViewById<Button>(R.id.updateButton).setOnClickListener { checkForUpdate(manual = true) }

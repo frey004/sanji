@@ -38,28 +38,14 @@
                 android:orientation="horizontal"
                 android:padding="16dp">
 
-                <FrameLayout
-                    android:layout_width="72dp"
-                    android:layout_height="72dp"
-                    android:background="@drawable/icon_frame">
-
-                    <TextView
-                        android:id="@+id/umaIconFallback"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center"
-                        android:text="ウマ"
-                        android:textColor="#FFFFFF"
-                        android:textSize="24sp"
-                        android:textStyle="bold" />
-
-                    <ImageView
-                        android:id="@+id/umaIcon"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="@string/tile_uma_title"
-                        android:scaleType="centerCrop" />
-                </FrameLayout>
+                <ImageView
+                    android:id="@+id/umaIcon"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:background="@drawable/icon_frame"
+                    android:contentDescription="@string/tile_uma_title"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/uma_musume" />
 
                 <LinearLayout
                     android:layout_width="0dp"

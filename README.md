@@ -15,7 +15,7 @@ Requiere Android 8.0 o superior.
 La pantalla de inicio tiene un cuadro por cada modo; al tocarlo se abre su
 propia pantalla con sus ajustes:
 
-- **Uma Musume** (cuadro rosa, con el icono del juego si está instalado).
+- **Uma Musume** (cuadro rosa, con la imagen del juego).
 - **Pantalla en vivo** (cuadro verde).
 - **Enlaces web** (cuadro azul).
 
