@@ -12,8 +12,6 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.CheckBox
-import android.widget.GridLayout
 import android.widget.RadioButton
 import android.widget.Spinner
 import android.widget.TextView
@@ -107,29 +105,6 @@ class LiveActivity : ComponentActivity() {
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
-
-        val grid = findViewById<GridLayout>(R.id.candidateGrid)
-        val selected = LiveCaptions.candidates(this).toMutableList()
-        for (language in LiveCaptions.sources) {
-            val box = CheckBox(this).apply {
-                text = language.name
-                isChecked = language in selected
-                layoutParams = GridLayout.LayoutParams().apply {
-                    width = 0
-                    columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
-                }
-            }
-            box.setOnCheckedChangeListener { view, checked ->
-                if (checked && selected.size >= LiveCaptions.MAX_AUTO_LANGUAGES) {
-                    view.isChecked = false
-                    Toast.makeText(this, "Como mucho ${LiveCaptions.MAX_AUTO_LANGUAGES} idiomas a la vez", Toast.LENGTH_SHORT).show()
-                    return@setOnCheckedChangeListener
-                }
-                if (checked) selected += language else selected -= language
-                LiveCaptions.saveCandidates(this, LiveCaptions.sources.filter { it in selected })
-            }
-            grid.addView(box)
-        }
     }
 
     private fun setupSpinner(spinner: Spinner, items: List<Language>, selected: Language, onSelected: (Language) -> Unit) {
@@ -168,23 +143,17 @@ class LiveActivity : ComponentActivity() {
             return
         }
 
-        val languages = LiveCaptions.languagesToListen(this)
-        if (languages.isEmpty()) {
-            Toast.makeText(this, "Marca al menos un idioma para detectar", Toast.LENGTH_LONG).show()
-            return
-        }
         startButton.isEnabled = false
         lifecycleScope.launch {
             try {
-                for (source in languages) {
-                    if (!LiveCaptions.isModelReady(this@LiveActivity, source)) {
-                        statusText.text = "Descargando la voz en ${source.name} (solo la primera vez)…"
-                        LiveCaptions.downloadModel(this@LiveActivity, source) { percent ->
-                            runOnUiThread {
-                                statusText.text = "Descargando la voz en ${source.name} (solo la primera vez)… $percent %"
-                            }
-                        }
+                if (!LiveCaptions.isSpeechModelReady(this@LiveActivity)) {
+                    val message = "Descargando el reconocimiento de voz (solo la primera vez)…"
+                    statusText.text = message
+                    LiveCaptions.downloadSpeechModel(this@LiveActivity) { percent ->
+                        runOnUiThread { statusText.text = "$message $percent %" }
                     }
+                }
+                for (source in LiveCaptions.possibleSources(this@LiveActivity)) {
                     Languages.translator(source, Languages.target(this@LiveActivity))?.let { translator ->
                         statusText.text = "Descargando la traducción desde ${source.name} (solo la primera vez)…"
                         try {

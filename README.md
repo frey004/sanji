@@ -61,18 +61,23 @@ Los cambios de opacidad se aplican al momento, sin reiniciar la burbuja.
 Subtítulos traducidos de lo que se **dice** en un directo o vídeo de otra app:
 
 1. Toca el cuadro **Directos**, elige el idioma que se habla y al que traducir.
-   Con **Detectar automáticamente** marcas hasta 3 idiomas posibles: la app
-   escucha con todos a la vez, muestra el que mejor entiende (arriba del
-   recuadro pone cuál ha detectado) y cambia sola si el directo cambia de idioma.
+   Con **Detectar automáticamente** distingue entre japonés, chino, coreano e
+   inglés (arriba del recuadro pone cuál está oyendo) y cambia solo si el
+   directo cambia de idioma.
 2. Elige qué escuchar: el **audio del directo** dentro del móvil (Android 10+)
    o el **micrófono**.
 3. Pulsa **Iniciar subtítulos** y abre el directo. Aparece un recuadro negro
    (se puede arrastrar) con la traducción: en blanco las frases terminadas y en
    gris lo que se está diciendo.
 
-La voz se reconoce en el propio móvil con [Vosk](https://alphacephei.com/vosk/):
-la primera vez se descarga el modelo del idioma (40-80 MB). Algunas apps no
-permiten capturar su sonido; en ese caso usa la opción «Micrófono».
+La voz se reconoce en el propio móvil, sin internet:
+
+- Japonés, chino, coreano e inglés: [SenseVoice](https://github.com/k2-fsa/sherpa-onnx)
+  (se descarga una vez, ~170 MB; ocupa ~240 MB).
+- Francés, alemán, italiano, portugués, español, vietnamita e hindi:
+  [Vosk](https://alphacephei.com/vosk/) (40-80 MB por idioma).
+
+Algunas apps no permiten capturar su sonido; en ese caso usa la opción «Micrófono».
 
 ### Traducción en vivo de la pantalla
 

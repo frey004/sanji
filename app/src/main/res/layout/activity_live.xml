@@ -42,11 +42,6 @@
                 android:text="@string/live_auto_hint"
                 android:textSize="13sp" />
 
-            <GridLayout
-                android:id="@+id/candidateGrid"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:columnCount="2" />
         </LinearLayout>
 
         <TextView

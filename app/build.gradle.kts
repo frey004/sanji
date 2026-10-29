@@ -3,6 +3,17 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+// sherpa-onnx (reconocimiento de voz SenseVoice) solo se publica como AAR en
+// sus versiones de GitHub: se descarga una vez y se guarda en app/libs.
+val sherpaOnnxAar = file("libs/sherpa-onnx-2.0.1.aar")
+if (!sherpaOnnxAar.exists()) {
+    sherpaOnnxAar.parentFile.mkdirs()
+    val partial = File(sherpaOnnxAar.path + ".part")
+    uri("https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-2.0.1.aar").toURL()
+        .openStream().use { input -> partial.outputStream().use { input.copyTo(it) } }
+    partial.renameTo(sherpaOnnxAar)
+}
+
 android {
     namespace = "com.frey.traductorpantalla"
     compileSdk = 35
@@ -53,6 +64,13 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    packaging {
+        jniLibs {
+            // La app usa sherpa-onnx desde Kotlin (JNI): sus APIs de C y C++ sobran.
+            excludes += listOf("**/libsherpa-onnx-c-api.so", "**/libsherpa-onnx-cxx-api.so")
+        }
+    }
 }
 
 dependencies {
@@ -70,7 +88,11 @@ dependencies {
     implementation("com.google.mlkit:text-recognition-devanagari:16.0.1")
     // Traducción sin conexión (descarga cada idioma una sola vez, ~30 MB).
     implementation("com.google.mlkit:translate:17.0.3")
-    // Reconocimiento de voz sin conexión para los subtítulos de directos.
+    // Reconocimiento de voz sin conexión para los subtítulos de directos
+    // (Vosk para los idiomas que SenseVoice no reconoce).
     implementation("com.alphacephei:vosk-android:0.3.47@aar")
     implementation("net.java.dev.jna:jna:5.13.0@aar")
+    implementation(files(sherpaOnnxAar))
+    // Para descomprimir el modelo de SenseVoice (.tar.bz2).
+    implementation("org.apache.commons:commons-compress:1.27.1")
 }
