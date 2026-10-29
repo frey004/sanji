@@ -33,4 +33,10 @@
     <string name="web_next">Página siguiente</string>
     <string name="web_empty">Pulsa «Link» y pega el enlace de la página que quieres traducir.</string>
     <string name="web_link_title">Abrir enlace</string>
+    <string name="download_title">Descargar capítulo</string>
+    <string name="download_zip">ZIP (imágenes del manga)</string>
+    <string name="download_pdf">PDF</string>
+    <string name="download_epub">EPUB</string>
+    <string name="download_txt">Solo texto (.txt)</string>
+    <string name="download_translate_images">Traducir el texto de las imágenes</string>
 </resources>

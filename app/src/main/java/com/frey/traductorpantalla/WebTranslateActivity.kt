@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.DocumentsContract
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
@@ -17,8 +18,10 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ArrayAdapter
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ProgressBar
+import android.widget.RadioGroup
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -27,8 +30,10 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import com.google.mlkit.nl.translate.Translator
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -37,6 +42,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.IOException
 import java.net.URLEncoder
 
 /**
@@ -64,8 +70,23 @@ class WebTranslateActivity : ComponentActivity() {
     /** Texto que se va a guardar mientras el usuario elige dónde. */
     private var downloadText = ""
 
-    private val saveLauncher =
-        registerForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri -> uri?.let { save(it) } }
+    private val saveTextLauncher =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri -> uri?.let { saveText(it) } }
+
+    /** Capítulo que se va a descargar mientras el usuario elige dónde guardarlo. */
+    private class PendingExport(
+        val format: MangaFormat,
+        val translateImages: Boolean,
+        val title: String,
+        val urls: List<String>,
+        val referer: String,
+    )
+    private var pendingExport: PendingExport? = null
+    private val exportLaunchers = MangaFormat.entries.associateWith { format ->
+        registerForActivityResult(ActivityResultContracts.CreateDocument(format.mimeType)) { uri ->
+            uri?.let { exportManga(it) }
+        }
+    }
 
     private lateinit var script: String
     private var translator: Translator? = null
@@ -302,33 +323,127 @@ class WebTranslateActivity : ComponentActivity() {
 
     // ---------------------------------------------------------------- descargar
 
-    /** Guarda como .txt el texto que se ve ahora (traducido u original). */
+    /** Pregunta el formato: imágenes del manga (ZIP, PDF, EPUB) o solo texto. */
     private fun download() {
         if (webView.url == null) {
             Toast.makeText(this, "Primero abre una página con «Link»", Toast.LENGTH_SHORT).show()
             return
         }
+        val view = layoutInflater.inflate(R.layout.dialog_download, null)
+        val group = view.findViewById<RadioGroup>(R.id.formatGroup)
+        val translateImages = view.findViewById<CheckBox>(R.id.translateImages)
+        group.setOnCheckedChangeListener { _, id ->
+            translateImages.visibility = if (id == R.id.formatTxt) View.GONE else View.VISIBLE
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.download_title)
+            .setView(view)
+            .setPositiveButton(R.string.web_download) { _, _ ->
+                when (group.checkedRadioButtonId) {
+                    R.id.formatTxt -> downloadText()
+                    R.id.formatPdf -> downloadManga(MangaFormat.PDF, translateImages.isChecked)
+                    R.id.formatEpub -> downloadManga(MangaFormat.EPUB, translateImages.isChecked)
+                    else -> downloadManga(MangaFormat.ZIP, translateImages.isChecked)
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun fileName(title: String) =
+        title.replace(Regex("[\\\\/:*?\"<>|]"), " ").trim().take(80).ifBlank { "pagina" }
+
+    /** Guarda como .txt el texto que se ve ahora (traducido u original). */
+    private fun downloadText() {
         if (pending > 0) Toast.makeText(this, "Aún se está traduciendo: se guardará lo que ya esté listo", Toast.LENGTH_SHORT).show()
         webView.evaluateJavascript("[document.title, document.body ? document.body.innerText : '']") { result ->
             val values = runCatching { JSONArray(result) }.getOrNull() ?: return@evaluateJavascript
             val title = values.optString(0).ifBlank { "pagina" }
             downloadText = title + "\n" + webView.url + "\n\n" + values.optString(1).trim() + "\n"
-            val name = title.replace(Regex("[\\\\/:*?\"<>|]"), " ").trim().take(80).ifBlank { "pagina" }
-            saveLauncher.launch("$name.txt")
+            saveTextLauncher.launch("${fileName(title)}.txt")
         }
     }
 
-    private fun save(uri: Uri) {
+    private fun saveText(uri: Uri) {
         val text = downloadText
         lifecycleScope.launch {
             try {
                 withContext(Dispatchers.IO) {
                     contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { it.write(text) }
-                        ?: throw java.io.IOException("no se pudo abrir el archivo")
+                        ?: throw IOException("no se pudo abrir el archivo")
                 }
                 Toast.makeText(this@WebTranslateActivity, "Traducción guardada", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(this@WebTranslateActivity, "No se pudo guardar: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    /** Busca las imágenes grandes de la página (las del capítulo), en orden. */
+    private fun downloadManga(format: MangaFormat, translateImages: Boolean) {
+        webView.evaluateJavascript(
+            """(function(){var out=[],seen={};var imgs=document.images;
+            for(var i=0;i<imgs.length;i++){var im=imgs[i];
+              var lazy=im.getAttribute('data-src')||im.getAttribute('data-lazy-src')||im.getAttribute('data-original')||im.getAttribute('data-url');
+              var src=im.currentSrc||im.src;
+              if(lazy&&(!src||/^data:image\/(gif|svg)/.test(src)||!im.naturalWidth))src=lazy;
+              if(!src||src.indexOf('blob:')==0)continue;
+              try{src=new URL(src.trim(),location.href).href}catch(e){continue}
+              var w=im.naturalWidth,h=im.naturalHeight;
+              if(w&&h&&(w<200||h<200))continue;
+              if(seen[src])continue;seen[src]=1;out.push(src);}
+            return [document.title,out];})()"""
+        ) { result ->
+            val values = runCatching { JSONArray(result) }.getOrNull() ?: return@evaluateJavascript
+            val urls = values.getJSONArray(1).let { list -> (0 until list.length()).map { list.getString(it) } }
+            if (urls.isEmpty()) {
+                Toast.makeText(this, "No se encontraron imágenes en esta página", Toast.LENGTH_LONG).show()
+                return@evaluateJavascript
+            }
+            val title = values.optString(0).ifBlank { "manga" }
+            pendingExport = PendingExport(format, translateImages, title, urls, webView.url.orEmpty())
+            exportLaunchers.getValue(format).launch("${fileName(title)}.${format.extension}")
+        }
+    }
+
+    private fun exportManga(uri: Uri) {
+        val export = pendingExport ?: return
+        pendingExport = null
+        val message = TextView(this).apply {
+            setPadding(64, 32, 64, 0)
+            text = "Buscando imágenes…"
+        }
+        val exporter = MangaExporter(this, Languages.source(this), Languages.target(this), export.translateImages)
+        val userAgent = webView.settings.userAgentString
+        var job: Job? = null
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(R.string.download_title)
+            .setView(message)
+            .setCancelable(false)
+            .setNegativeButton(android.R.string.cancel) { _, _ -> job?.cancel() }
+            .show()
+        job = lifecycleScope.launch {
+            var ok = false
+            try {
+                val pages = exporter.preparePages(export.urls, export.referer, userAgent) { message.text = it }
+                message.text = "Guardando ${pages.size} páginas…"
+                withContext(Dispatchers.IO) {
+                    contentResolver.openOutputStream(uri)?.use { exporter.write(export.format, pages, export.title, it) }
+                        ?: throw IOException("no se pudo abrir el archivo")
+                }
+                ok = true
+                Toast.makeText(this@WebTranslateActivity, "Capítulo guardado (${pages.size} páginas)", Toast.LENGTH_LONG).show()
+            } catch (e: CancellationException) {
+                Toast.makeText(this@WebTranslateActivity, "Descarga cancelada", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@WebTranslateActivity, "No se pudo descargar: ${e.message}", Toast.LENGTH_LONG).show()
+            } finally {
+                exporter.close()
+                if (!ok) withContext(NonCancellable + Dispatchers.IO) {
+                    // No dejar un archivo vacío o a medias.
+                    runCatching { DocumentsContract.deleteDocument(contentResolver, uri) }
+                }
+                dialog.dismiss()
             }
         }
     }

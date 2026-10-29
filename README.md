@@ -29,8 +29,12 @@ Debajo está el apartado de **Actualizaciones**.
 3. La página aparece dentro del marco, ya traducida. Con **◀ Pág 01/02 ▶** pasas
    de una pantalla a otra; también puedes deslizar. Puedes seguir navegando por
    sus enlaces y lo que se carga al hacer scroll también se traduce.
-4. **Descargar** guarda el texto que ves (traducido u original) como archivo
-   `.txt` donde elijas.
+4. **Descargar** guarda el capítulo en el formato que elijas:
+   - **ZIP**, **PDF** o **EPUB** con las imágenes del manga. Con «Traducir el
+     texto de las imágenes» activado, la app lee el texto de cada página,
+     lo traduce y lo escribe encima del bocadillo. Las tiras largas (webtoons)
+     se cortan en varias páginas.
+   - **Solo texto (.txt)**: el texto de la página (traducido u original).
 5. **Ver original / Ver traducción** cambia entre el texto original y el traducido.
 
 También puedes **compartir** un enlace desde Chrome u otra app y elegir
