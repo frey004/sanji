@@ -48,4 +48,6 @@
     <string name="live_audio_mic">Micrófono</string>
     <string name="live_start">Iniciar subtítulos</string>
     <string name="live_howto">Cómo se usa:\n\n• Pulsa Iniciar, acepta los permisos y abre el directo.\n• Arriba aparece en blanco lo ya traducido y en gris lo que se está diciendo.\n• Arrastra el recuadro para moverlo.\n• Para quitarlo: Detener aquí o en la notificación.\n\nLa primera vez se descarga la voz del idioma (40-80 MB); después funciona sin internet.\n\nAlgunas apps no dejan capturar su sonido: si el recuadro dice «Sin sonido», usa «Micrófono» con el volumen alto.</string>
+    <string name="live_auto">Detectar automáticamente</string>
+    <string name="live_auto_hint">Marca los idiomas que se pueden hablar en el directo (máximo 3). La app escucha con todos a la vez y muestra el que mejor entiende; si el directo cambia de idioma, cambia sola.</string>
 </resources>

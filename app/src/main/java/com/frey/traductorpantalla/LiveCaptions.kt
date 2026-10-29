@@ -45,6 +45,34 @@ object LiveCaptions {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString("source", source.code).apply()
     }
 
+    /** Cuántos idiomas se escuchan a la vez en modo automático (cada uno gasta CPU y memoria). */
+    const val MAX_AUTO_LANGUAGES = 3
+
+    /** Modo «Detectar automáticamente»: escucha varios idiomas y elige el que mejor entiende. */
+    fun autoDetect(context: Context) =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean("auto", false)
+
+    fun saveAutoDetect(context: Context, auto: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean("auto", auto).apply()
+    }
+
+    /** Idiomas entre los que elige el modo automático. */
+    fun candidates(context: Context): List<Language> {
+        val codes = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getStringSet("candidates", null)
+            ?: setOf(TranslateLanguage.ENGLISH, TranslateLanguage.JAPANESE, TranslateLanguage.KOREAN)
+        return sources.filter { it.code in codes }
+    }
+
+    fun saveCandidates(context: Context, languages: List<Language>) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putStringSet("candidates", languages.map { it.code }.toSet())
+            .apply()
+    }
+
+    /** Los idiomas que hay que escuchar con los ajustes actuales. */
+    fun languagesToListen(context: Context): List<Language> =
+        if (autoDetect(context)) candidates(context) else listOf(source(context))
+
     /** true: escucha el micrófono; false: el audio de las apps (Android 10+). */
     fun useMicrophone(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean("microphone", false)

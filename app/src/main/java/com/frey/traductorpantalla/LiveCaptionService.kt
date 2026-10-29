@@ -49,6 +49,9 @@ import kotlin.math.abs
  * Subtítulos de directos: escucha el audio de las apps (o el micrófono),
  * lo pasa a texto con Vosk, lo traduce con ML Kit y lo muestra en un
  * recuadro negro flotante.
+ *
+ * En modo automático escucha a la vez con el modelo de cada idioma candidato
+ * y muestra el que entiende el audio con más confianza.
  */
 class LiveCaptionService : Service() {
 
@@ -64,6 +67,8 @@ class LiveCaptionService : Service() {
         private const val MAX_PARTIAL_CHARS = 140
         private const val PARTIAL_TRANSLATE_MS = 700L
         private const val SILENCE_HINT_MS = 8000L
+        /** Ventaja que necesita otro idioma para quitarle el puesto al actual. */
+        private const val SWITCH_MARGIN = 0.05
 
         @Volatile
         var isRunning = false
@@ -73,18 +78,32 @@ class LiveCaptionService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val mainHandler = Handler(Looper.getMainLooper())
     private lateinit var windowManager: WindowManager
-    private lateinit var source: Language
+
+    /** Un reconocedor por idioma escuchado. Solo lo usa el hilo de audio. */
+    private class Listener(val language: Language, val model: Model, val translator: Translator?) {
+        lateinit var recognizer: Recognizer
+        var lastPartial = ""
+        /** Media de la confianza de Vosk en las últimas frases de este idioma. */
+        var score = 0.0
+        var heard = 0
+    }
+
+    private var listeners: List<Listener> = emptyList()
+    /** Idioma cuyos subtítulos se muestran. */
+    @Volatile
+    private var active: Listener? = null
+    private var autoDetect = false
 
     private var projection: MediaProjection? = null
     private var audioRecord: AudioRecord? = null
     private var audioThread: Thread? = null
     @Volatile
     private var listening = false
-    private var model: Model? = null
-    private var translator: Translator? = null
 
     private var box: LinearLayout? = null
     private var linesView: TextView? = null
+    /** En modo automático, el idioma detectado («Japonés → Español»). */
+    private var languageView: TextView? = null
     private var partialView: TextView? = null
     /** Últimas frases ya traducidas. */
     private val lines = ArrayDeque<String>()
@@ -125,17 +144,25 @@ class LiveCaptionService : Service() {
         }
         isRunning = true
         windowManager = getSystemService(WindowManager::class.java)
-        source = LiveCaptions.source(this)
-        translator = Languages.translator(source, Languages.target(this))
+        val languages = LiveCaptions.languagesToListen(this)
+        autoDetect = languages.size > 1
         addCaptionBox()
         showPartial("Cargando el reconocimiento de voz…")
 
         scope.launch {
             try {
-                translator?.let { Languages.downloadModel(it) }
-                model = withContext(Dispatchers.IO) { Model(LiveCaptions.modelDir(this@LiveCaptionService, source).path) }
+                val target = Languages.target(this@LiveCaptionService)
+                listeners = languages.map { language ->
+                    val translator = Languages.translator(language, target)
+                    translator?.let { Languages.downloadModel(it) }
+                    val model = withContext(Dispatchers.IO) {
+                        Model(LiveCaptions.modelDir(this@LiveCaptionService, language).path)
+                    }
+                    Listener(language, model, translator)
+                }
+                if (!autoDetect) active = listeners.first()
                 startListening(useMic)
-                showPartial("Escuchando…")
+                showPartial(if (autoDetect) "Escuchando… detectando el idioma" else "Escuchando…")
             } catch (e: Exception) {
                 Toast.makeText(this@LiveCaptionService, "No se pudo iniciar: ${e.message}", Toast.LENGTH_LONG).show()
                 stopSelf()
@@ -172,14 +199,18 @@ class LiveCaptionService : Service() {
         }
         val record = builder.build()
         if (record.state != AudioRecord.STATE_INITIALIZED) throw IllegalStateException("no se pudo abrir el audio")
-        val recognizer = Recognizer(model, SAMPLE_RATE.toFloat())
+        for (listener in listeners) {
+            listener.recognizer = Recognizer(listener.model, SAMPLE_RATE.toFloat()).apply {
+                // Con las palabras viene la confianza de cada una: sirve para detectar el idioma.
+                setWords(autoDetect)
+            }
+        }
         audioRecord = record
         listening = true
         record.startRecording()
 
         audioThread = Thread({
             val buffer = ShortArray(SAMPLE_RATE / 10)
-            var lastPartial = ""
             var lastSound = System.currentTimeMillis()
             var hinted = false
             try {
@@ -193,28 +224,60 @@ class LiveCaptionService : Service() {
                         hinted = true
                         post { if (lines.isEmpty()) showPartial(silenceHint(useMic)) }
                     }
-                    if (recognizer.acceptWaveForm(buffer, n)) {
-                        val text = JSONObject(recognizer.result).optString("text")
-                        lastPartial = ""
-                        post { onFinal(text) }
-                    } else {
-                        val partial = JSONObject(recognizer.partialResult).optString("partial")
-                        if (partial.length > MAX_PARTIAL_CHARS) {
-                            // Habla continua: se da la frase por terminada.
-                            val text = JSONObject(recognizer.finalResult).optString("text")
-                            recognizer.reset()
-                            lastPartial = ""
-                            post { onFinal(text) }
-                        } else if (partial != lastPartial) {
-                            lastPartial = partial
-                            post { onPartial(partial) }
-                        }
-                    }
+                    for (listener in listeners) listen(listener, buffer, n)
                 }
             } finally {
-                recognizer.close()
+                listeners.forEach { it.recognizer.close() }
             }
         }, "subtitulos").apply { start() }
+    }
+
+    /** Pasa un trozo de audio al reconocedor de un idioma (hilo de audio). */
+    private fun listen(listener: Listener, buffer: ShortArray, n: Int) {
+        val recognizer = listener.recognizer
+        val result = when {
+            recognizer.acceptWaveForm(buffer, n) -> JSONObject(recognizer.result)
+            else -> {
+                val partial = JSONObject(recognizer.partialResult).optString("partial")
+                if (partial.length > MAX_PARTIAL_CHARS) {
+                    // Habla continua: se da la frase por terminada.
+                    JSONObject(recognizer.finalResult).also { recognizer.reset() }
+                } else {
+                    if (partial != listener.lastPartial) {
+                        listener.lastPartial = partial
+                        if (listener === active) post { onPartial(listener, partial) }
+                    }
+                    return
+                }
+            }
+        }
+        listener.lastPartial = ""
+        val text = result.optString("text")
+        if (text.isBlank()) return
+        if (autoDetect) updateScore(listener, result)
+        if (listener === active) post { onFinal(listener, text) }
+    }
+
+    /**
+     * Cada modelo solo sabe escribir su idioma, así que con audio de otro
+     * idioma «adivina» palabras con poca confianza. El idioma real es el que
+     * mantiene la confianza media más alta.
+     */
+    private fun updateScore(listener: Listener, result: JSONObject) {
+        val words = result.optJSONArray("result") ?: return
+        if (words.length() == 0) return
+        val confidence = (0 until words.length()).sumOf { words.getJSONObject(it).optDouble("conf", 0.0) } / words.length()
+        // Las frases de una o dos palabras dicen poco del idioma.
+        val weight = minOf(1.0, words.length() / 4.0) * 0.5
+        listener.score = if (listener.heard == 0) confidence else listener.score * (1 - weight) + confidence * weight
+        listener.heard++
+
+        val best = listeners.filter { it.heard > 0 }.maxByOrNull { it.score } ?: return
+        val current = active
+        if (current == null || (best !== current && best.score > current.score + SWITCH_MARGIN)) {
+            active = best
+            post { onLanguageChanged(best) }
+        }
     }
 
     private fun silenceHint(useMic: Boolean) = if (useMic) {
@@ -228,13 +291,19 @@ class LiveCaptionService : Service() {
     }
 
     /** Vosk separa con espacios también el japonés y el chino. */
-    private fun clean(text: String) = if (source.lineSeparator.isEmpty()) text.replace(" ", "") else text.trim()
+    private fun clean(listener: Listener, text: String) =
+        if (listener.language.lineSeparator.isEmpty()) text.replace(" ", "") else text.trim()
 
-    private fun onFinal(raw: String) {
-        val text = clean(raw)
+    private fun onLanguageChanged(listener: Listener) {
+        languageView?.text = "${listener.language.name} → ${Languages.target(this).name}"
+        languageView?.visibility = android.view.View.VISIBLE
+    }
+
+    private fun onFinal(listener: Listener, raw: String) {
+        val text = clean(listener, raw)
         if (text.isEmpty()) return
         scope.launch {
-            val translated = runCatching { translator?.translate(text)?.await() ?: text }.getOrDefault(text)
+            val translated = runCatching { listener.translator?.translate(text)?.await() ?: text }.getOrDefault(text)
             lines.addLast(translated)
             while (lines.size > 2) lines.removeFirst()
             linesView?.text = lines.joinToString("\n")
@@ -243,8 +312,8 @@ class LiveCaptionService : Service() {
     }
 
     /** Traduce lo que se está diciendo, como mucho cada [PARTIAL_TRANSLATE_MS]. */
-    private fun onPartial(raw: String) {
-        val text = clean(raw)
+    private fun onPartial(listener: Listener, raw: String) {
+        val text = clean(listener, raw)
         if (text.isEmpty() || translatingPartial) return
         val now = System.currentTimeMillis()
         if (now - lastPartialTranslation < PARTIAL_TRANSLATE_MS) return
@@ -252,7 +321,7 @@ class LiveCaptionService : Service() {
         translatingPartial = true
         scope.launch {
             try {
-                val translated = runCatching { translator?.translate(text)?.await() ?: text }.getOrDefault(text)
+                val translated = runCatching { listener.translator?.translate(text)?.await() ?: text }.getOrDefault(text)
                 showPartial("$translated…")
             } finally {
                 translatingPartial = false
@@ -289,6 +358,12 @@ class LiveCaptionService : Service() {
             setTextColor(Color.rgb(190, 190, 190))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
         }
+        val languageText = TextView(this).apply {
+            setTextColor(Color.rgb(150, 200, 255))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            visibility = android.view.View.GONE
+        }
+        layout.addView(languageText)
         layout.addView(linesText)
         layout.addView(partialText)
 
@@ -330,6 +405,7 @@ class LiveCaptionService : Service() {
         box = layout
         linesView = linesText
         partialView = partialText
+        languageView = languageText
     }
 
     // ---------------------------------------------------------------- notificación
@@ -370,9 +446,11 @@ class LiveCaptionService : Service() {
             runCatching { it.stop() }
             it.release()
         }
-        model?.close()
+        listeners.forEach {
+            it.model.close()
+            it.translator?.close()
+        }
         projection?.stop()
-        translator?.close()
         super.onDestroy()
     }
 }

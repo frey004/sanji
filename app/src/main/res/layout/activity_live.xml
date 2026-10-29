@@ -27,6 +27,28 @@
             android:layout_width="match_parent"
             android:layout_height="48dp" />
 
+        <!-- Solo en modo automático: entre qué idiomas elegir. -->
+        <LinearLayout
+            android:id="@+id/autoPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/live_auto_hint"
+                android:textSize="13sp" />
+
+            <GridLayout
+                android:id="@+id/candidateGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2" />
+        </LinearLayout>
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

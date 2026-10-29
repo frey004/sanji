@@ -12,6 +12,8 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.CheckBox
+import android.widget.GridLayout
 import android.widget.RadioButton
 import android.widget.Spinner
 import android.widget.TextView
@@ -58,9 +60,7 @@ class LiveActivity : ComponentActivity() {
         startButton = findViewById(R.id.startButton)
         statusText = findViewById(R.id.statusText)
 
-        setupSpinner(findViewById(R.id.sourceSpinner), LiveCaptions.sources, LiveCaptions.source(this)) {
-            LiveCaptions.saveSource(this, it)
-        }
+        setupSourceSpinner()
         setupSpinner(findViewById(R.id.targetSpinner), Languages.targets, Languages.target(this)) {
             if (it != Languages.target(this)) Languages.save(this, Languages.source(this), it)
         }
@@ -88,6 +88,48 @@ class LiveActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         if (LiveCaptionService.isRunning) statusText.text = "Subtítulos activos."
+    }
+
+    /** Idioma del directo: «Detectar automáticamente» o uno concreto. */
+    private fun setupSourceSpinner() {
+        val spinner = findViewById<Spinner>(R.id.sourceSpinner)
+        val autoPanel = findViewById<View>(R.id.autoPanel)
+        val names = listOf(getString(R.string.live_auto)) + LiveCaptions.sources.map { it.name }
+        spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, names)
+        val auto = LiveCaptions.autoDetect(this)
+        spinner.setSelection(if (auto) 0 else LiveCaptions.sources.indexOf(LiveCaptions.source(this)) + 1)
+        autoPanel.visibility = if (auto) View.VISIBLE else View.GONE
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                LiveCaptions.saveAutoDetect(this@LiveActivity, position == 0)
+                if (position > 0) LiveCaptions.saveSource(this@LiveActivity, LiveCaptions.sources[position - 1])
+                autoPanel.visibility = if (position == 0) View.VISIBLE else View.GONE
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        val grid = findViewById<GridLayout>(R.id.candidateGrid)
+        val selected = LiveCaptions.candidates(this).toMutableList()
+        for (language in LiveCaptions.sources) {
+            val box = CheckBox(this).apply {
+                text = language.name
+                isChecked = language in selected
+                layoutParams = GridLayout.LayoutParams().apply {
+                    width = 0
+                    columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
+                }
+            }
+            box.setOnCheckedChangeListener { view, checked ->
+                if (checked && selected.size >= LiveCaptions.MAX_AUTO_LANGUAGES) {
+                    view.isChecked = false
+                    Toast.makeText(this, "Como mucho ${LiveCaptions.MAX_AUTO_LANGUAGES} idiomas a la vez", Toast.LENGTH_SHORT).show()
+                    return@setOnCheckedChangeListener
+                }
+                if (checked) selected += language else selected -= language
+                LiveCaptions.saveCandidates(this, LiveCaptions.sources.filter { it in selected })
+            }
+            grid.addView(box)
+        }
     }
 
     private fun setupSpinner(spinner: Spinner, items: List<Language>, selected: Language, onSelected: (Language) -> Unit) {
@@ -126,24 +168,30 @@ class LiveActivity : ComponentActivity() {
             return
         }
 
-        val source = LiveCaptions.source(this)
+        val languages = LiveCaptions.languagesToListen(this)
+        if (languages.isEmpty()) {
+            Toast.makeText(this, "Marca al menos un idioma para detectar", Toast.LENGTH_LONG).show()
+            return
+        }
         startButton.isEnabled = false
         lifecycleScope.launch {
             try {
-                if (!LiveCaptions.isModelReady(this@LiveActivity, source)) {
-                    statusText.text = "Descargando la voz en ${source.name} (solo la primera vez)…"
-                    LiveCaptions.downloadModel(this@LiveActivity, source) { percent ->
-                        runOnUiThread {
-                            statusText.text = "Descargando la voz en ${source.name} (solo la primera vez)… $percent %"
+                for (source in languages) {
+                    if (!LiveCaptions.isModelReady(this@LiveActivity, source)) {
+                        statusText.text = "Descargando la voz en ${source.name} (solo la primera vez)…"
+                        LiveCaptions.downloadModel(this@LiveActivity, source) { percent ->
+                            runOnUiThread {
+                                statusText.text = "Descargando la voz en ${source.name} (solo la primera vez)… $percent %"
+                            }
                         }
                     }
-                }
-                Languages.translator(source, Languages.target(this@LiveActivity))?.let { translator ->
-                    statusText.text = "Descargando el idioma de traducción (solo la primera vez)…"
-                    try {
-                        Languages.downloadModel(translator)
-                    } finally {
-                        translator.close()
+                    Languages.translator(source, Languages.target(this@LiveActivity))?.let { translator ->
+                        statusText.text = "Descargando la traducción desde ${source.name} (solo la primera vez)…"
+                        try {
+                            Languages.downloadModel(translator)
+                        } finally {
+                            translator.close()
+                        }
                     }
                 }
             } catch (e: Exception) {

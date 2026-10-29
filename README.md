@@ -61,6 +61,9 @@ Los cambios de opacidad se aplican al momento, sin reiniciar la burbuja.
 Subtítulos traducidos de lo que se **dice** en un directo o vídeo de otra app:
 
 1. Toca el cuadro **Directos**, elige el idioma que se habla y al que traducir.
+   Con **Detectar automáticamente** marcas hasta 3 idiomas posibles: la app
+   escucha con todos a la vez, muestra el que mejor entiende (arriba del
+   recuadro pone cuál ha detectado) y cambia sola si el directo cambia de idioma.
 2. Elige qué escuchar: el **audio del directo** dentro del móvil (Android 10+)
    o el **micrófono**.
 3. Pulsa **Iniciar subtítulos** y abre el directo. Aparece un recuadro negro
