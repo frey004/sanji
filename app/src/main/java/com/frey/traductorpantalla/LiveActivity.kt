@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.projection.MediaProjectionManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -56,6 +57,10 @@ class LiveActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_live)
+        setupHeader(
+            R.string.tile_live_title, R.string.live_subtitle, R.drawable.header_live,
+            Color.rgb(45, 43, 58), emoji = "🎙",
+        )
         startButton = findViewById(R.id.startButton)
         statusText = findViewById(R.id.statusText)
 

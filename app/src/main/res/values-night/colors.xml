@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Modo oscuro: los mismos acentos sobre fondos oscuros. -->
+    <color name="bg">#121018</color>
+    <color name="surface">#1E1B27</color>
+    <color name="field">#2A2634</color>
+    <color name="outline">#302B3D</color>
+    <color name="text">#F3F1FA</color>
+    <color name="text_secondary">#A9A5BA</color>
+    <color name="status">#A29BFE</color>
+</resources>

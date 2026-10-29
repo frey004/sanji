@@ -53,4 +53,14 @@
     <string name="live_online">Traducción en línea (mejor calidad)</string>
     <string name="live_online_hint">Usa Google Translate por internet, que traduce mucho mejor el japonés. Si no hay conexión, traduce sin internet automáticamente.</string>
     <string name="online_hint">Para todos los modos. Google Translate por internet traduce mucho mejor y detecta el idioma; sin conexión se usa la traducción del móvil.</string>
+    <string name="home_subtitle">Traduce juegos, pantallas, directos y webs</string>
+    <string name="settings_title">Ajustes</string>
+    <string name="back">Volver</string>
+    <string name="languages_title">Idiomas</string>
+    <string name="howto_title">Cómo se usa</string>
+    <string name="subtitles_title">Subtítulos</string>
+    <string name="translation_title">Traducción</string>
+    <string name="screen_subtitle">Traduce el texto de cualquier app o juego encima de la pantalla</string>
+    <string name="uma_subtitle">Diálogos, opciones y menús del juego, en tu idioma</string>
+    <string name="live_subtitle">Subtítulos traducidos de lo que se dice</string>
 </resources>

@@ -1,29 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
 
-        <TextView
+        <!-- Cabecera: el nombre de la app sobre el degradado violeta y rosa. -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_marginBottom="8dp"
-            android:text="@string/home_title"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+            android:background="@drawable/header_main"
+            android:orientation="vertical"
+            android:paddingStart="24dp"
+            android:paddingTop="36dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="64dp">
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/app_name"
+                android:textColor="#FFFFFF"
+                android:textSize="44sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:alpha="0.92"
+                android:text="@string/home_subtitle"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <!-- Los cuadros se montan un poco sobre la cabecera. -->
         <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="-44dp"
+            android:layout_marginEnd="10dp"
             android:columnCount="2">
 
-            <!-- Uma Musume ocupa toda la fila de arriba. -->
             <LinearLayout
                 android:id="@+id/tileUma"
                 android:layout_width="0dp"
@@ -33,15 +56,16 @@
                 android:layout_margin="6dp"
                 android:background="@drawable/tile_uma"
                 android:clickable="true"
+                android:elevation="4dp"
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="16dp">
+                android:padding="18dp">
 
                 <ImageView
                     android:id="@+id/umaIcon"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
+                    android:layout_width="76dp"
+                    android:layout_height="76dp"
                     android:background="@drawable/icon_frame"
                     android:contentDescription="@string/tile_uma_title"
                     android:scaleType="centerCrop"
@@ -66,10 +90,19 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
+                        android:alpha="0.92"
                         android:text="@string/tile_uma_hint"
-                        android:textColor="#E6FFFFFF"
+                        android:textColor="#FFFFFF"
                         android:textSize="13sp" />
                 </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.8"
+                    android:text="›"
+                    android:textColor="#FFFFFF"
+                    android:textSize="30sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -80,25 +113,26 @@
                 android:layout_margin="6dp"
                 android:background="@drawable/tile_screen"
                 android:clickable="true"
+                android:elevation="4dp"
                 android:focusable="true"
-                android:minHeight="150dp"
+                android:minHeight="160dp"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="18dp">
 
                 <TextView
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
                     android:background="@drawable/icon_frame"
                     android:gravity="center"
                     android:text="文A"
                     android:textColor="#FFFFFF"
-                    android:textSize="22sp"
+                    android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="16dp"
                     android:text="@string/tile_screen_title"
                     android:textColor="#FFFFFF"
                     android:textSize="17sp"
@@ -108,8 +142,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
+                    android:alpha="0.92"
                     android:text="@string/tile_screen_hint"
-                    android:textColor="#E6FFFFFF"
+                    android:textColor="#FFFFFF"
                     android:textSize="13sp" />
             </LinearLayout>
 
@@ -121,23 +156,26 @@
                 android:layout_margin="6dp"
                 android:background="@drawable/tile_web"
                 android:clickable="true"
+                android:elevation="4dp"
                 android:focusable="true"
-                android:minHeight="150dp"
+                android:minHeight="160dp"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="18dp">
 
                 <TextView
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
                     android:background="@drawable/icon_frame"
                     android:gravity="center"
                     android:text="🔗"
-                    android:textSize="26sp" />
+                    android:textColor="#FFFFFF"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="16dp"
                     android:text="@string/tile_web_title"
                     android:textColor="#FFFFFF"
                     android:textSize="17sp"
@@ -147,12 +185,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
+                    android:alpha="0.92"
                     android:text="@string/tile_web_hint"
-                    android:textColor="#E6FFFFFF"
+                    android:textColor="#FFFFFF"
                     android:textSize="13sp" />
             </LinearLayout>
 
-            <!-- Directos: también ocupa toda la fila. -->
             <LinearLayout
                 android:id="@+id/tileLive"
                 android:layout_width="0dp"
@@ -162,10 +200,11 @@
                 android:layout_margin="6dp"
                 android:background="@drawable/tile_live"
                 android:clickable="true"
+                android:elevation="4dp"
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="16dp">
+                android:padding="18dp">
 
                 <TextView
                     android:layout_width="56dp"
@@ -187,68 +226,80 @@
                         android:layout_height="wrap_content"
                         android:text="@string/tile_live_title"
                         android:textColor="#FFFFFF"
-                        android:textSize="17sp"
+                        android:textSize="20sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
+                        android:alpha="0.92"
                         android:text="@string/tile_live_hint"
-                        android:textColor="#E6FFFFFF"
+                        android:textColor="#FFFFFF"
                         android:textSize="13sp" />
                 </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.8"
+                    android:text="›"
+                    android:textColor="#FFFFFF"
+                    android:textSize="30sp" />
             </LinearLayout>
         </GridLayout>
 
-        <Switch
-            android:id="@+id/onlineSwitch"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_marginTop="24dp"
-            android:text="@string/live_online"
-            android:textStyle="bold" />
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="24dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:text="@string/online_hint"
-            android:textColor="#757575"
-            android:textSize="12sp" />
+            <LinearLayout style="@style/Sanji.Card">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_marginTop="32dp"
-            android:text="@string/update_section"
-            android:textColor="#1565C0"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+                <TextView
+                    style="@style/Sanji.CardTitle"
+                    android:text="@string/settings_title" />
 
-        <TextView
-            android:id="@+id/versionText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_marginTop="4dp"
-            android:textSize="14sp" />
+                <Switch
+                    android:id="@+id/onlineSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/live_online"
+                    android:textColor="@color/text"
+                    android:textSize="15sp" />
 
-        <Button
-            android:id="@+id/updateButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/update_check" />
+                <TextView
+                    style="@style/Sanji.Hint"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/online_hint" />
+            </LinearLayout>
 
-        <TextView
-            android:id="@+id/statusText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_marginTop="8dp"
-            android:textColor="#1565C0" />
+            <LinearLayout style="@style/Sanji.Card">
+
+                <TextView
+                    style="@style/Sanji.CardTitle"
+                    android:text="@string/update_section" />
+
+                <TextView
+                    android:id="@+id/versionText"
+                    style="@style/Sanji.Hint"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/updateButton"
+                    style="@style/Sanji.Button.Outline"
+                    android:text="@string/update_check" />
+
+                <TextView
+                    android:id="@+id/statusText"
+                    style="@style/Sanji.Hint"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/sanji_primary" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

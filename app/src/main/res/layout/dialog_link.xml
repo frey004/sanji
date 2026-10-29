@@ -9,8 +9,7 @@
 
     <EditText
         android:id="@+id/urlInput"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
+        style="@style/Sanji.Field"
         android:hint="@string/web_url_hint"
         android:imeOptions="actionGo"
         android:importantForAutofill="no"
@@ -27,8 +26,7 @@
 
     <Spinner
         android:id="@+id/sourceSpinner"
-        android:layout_width="match_parent"
-        android:layout_height="48dp" />
+        style="@style/Sanji.Spinner" />
 
     <TextView
         android:layout_width="match_parent"
@@ -39,6 +37,5 @@
 
     <Spinner
         android:id="@+id/targetSpinner"
-        android:layout_width="match_parent"
-        android:layout_height="48dp" />
+        style="@style/Sanji.Spinner" />
 </LinearLayout>

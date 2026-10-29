@@ -1,7 +1,7 @@
 package com.frey.traductorpantalla
 
+import android.graphics.Color
 import android.os.Bundle
-import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.TextView
@@ -17,7 +17,10 @@ class UmaActivity : BubbleActivity() {
         setContentView(R.layout.activity_uma)
         setupBubbleControls()
 
-        findViewById<ImageView>(R.id.umaIcon).clipToOutline = true
+        setupHeader(
+            R.string.tile_uma_title, R.string.uma_subtitle, R.drawable.header_uma,
+            Color.rgb(255, 111, 165), image = R.drawable.uma_musume,
+        )
 
         setupLanguageSpinner(findViewById<Spinner>(R.id.targetSpinner), Languages.targets, Languages.target(this)) {
             if (it == Languages.target(this)) return@setupLanguageSpinner

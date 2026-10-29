@@ -30,6 +30,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        // La barra de estado continúa la cabecera (también en modo oscuro).
+        window.statusBarColor = getColor(R.color.sanji_primary)
         statusText = findViewById(R.id.statusText)
 
         findViewById<View>(R.id.tileUma).setOnClickListener { startActivity(Intent(this, UmaActivity::class.java)) }

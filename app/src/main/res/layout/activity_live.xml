@@ -1,126 +1,147 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:orientation="vertical">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/live_intro"
-            android:textSize="16sp" />
+        <include layout="@layout/view_header" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="@string/live_source_label"
-            android:textStyle="bold" />
-
-        <Spinner
-            android:id="@+id/sourceSpinner"
-            android:layout_width="match_parent"
-            android:layout_height="48dp" />
-
-        <!-- Solo en modo automático: entre qué idiomas elegir. -->
+        <!-- Las tarjetas se montan un poco sobre la cabecera. -->
         <LinearLayout
-            android:id="@+id/autoPanel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="-40dp"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="24dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="@string/live_auto_hint"
-                android:textSize="13sp" />
+            <LinearLayout style="@style/Sanji.Card">
+
+                <TextView
+                    style="@style/Sanji.CardTitle"
+                    android:text="@string/languages_title" />
+
+                <TextView
+                    style="@style/Sanji.Hint"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/live_intro" />
+
+                <TextView
+                    style="@style/Sanji.Label"
+                    android:text="@string/live_source_label" />
+
+                <Spinner
+                    android:id="@+id/sourceSpinner"
+                    style="@style/Sanji.Spinner" />
+
+                <!-- Solo en modo automático. -->
+                <LinearLayout
+                    android:id="@+id/autoPanel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        style="@style/Sanji.Hint"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/live_auto_hint" />
+                </LinearLayout>
+
+                <TextView
+                    style="@style/Sanji.Label"
+                    android:text="@string/target_label" />
+
+                <Spinner
+                    android:id="@+id/targetSpinner"
+                    style="@style/Sanji.Spinner" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/Sanji.Card">
+
+                <TextView
+                    style="@style/Sanji.CardTitle"
+                    android:text="@string/translation_title" />
+
+                <Switch
+                    android:id="@+id/onlineSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/live_online"
+                    android:textColor="@color/text"
+                    android:textSize="15sp" />
+
+                <TextView
+                    style="@style/Sanji.Hint"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/live_online_hint" />
+
+                <TextView
+                    style="@style/Sanji.Label"
+                    android:text="@string/live_audio_label" />
+
+                <RadioGroup
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <RadioButton
+                        android:id="@+id/sourceAppAudio"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/live_audio_app"
+                        android:textColor="@color/text" />
+
+                    <RadioButton
+                        android:id="@+id/sourceMicrophone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/live_audio_mic"
+                        android:textColor="@color/text" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <LinearLayout style="@style/Sanji.Card">
+
+                <Button
+                    android:id="@+id/startButton"
+                    style="@style/Sanji.Button.Primary"
+                    android:layout_marginTop="0dp"
+                    android:background="@drawable/btn_live"
+                    android:text="@string/live_start" />
+
+                <Button
+                    android:id="@+id/stopButton"
+                    style="@style/Sanji.Button.Outline"
+                    android:text="@string/stop" />
+
+                <TextView
+                    android:id="@+id/statusText"
+                    style="@style/Sanji.Hint"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center"
+                    android:textColor="@color/sanji_primary" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/Sanji.Card">
+
+                <TextView
+                    style="@style/Sanji.CardTitle"
+                    android:text="@string/howto_title" />
+
+                <TextView
+                    style="@style/Sanji.Hint"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/live_howto"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
         </LinearLayout>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/target_label"
-            android:textStyle="bold" />
-
-        <Spinner
-            android:id="@+id/targetSpinner"
-            android:layout_width="match_parent"
-            android:layout_height="48dp" />
-
-        <Switch
-            android:id="@+id/onlineSwitch"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/live_online" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/live_online_hint"
-            android:textColor="#757575"
-            android:textSize="12sp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/live_audio_label"
-            android:textStyle="bold" />
-
-        <RadioGroup
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <RadioButton
-                android:id="@+id/sourceAppAudio"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/live_audio_app" />
-
-            <RadioButton
-                android:id="@+id/sourceMicrophone"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/live_audio_mic" />
-        </RadioGroup>
-
-        <Button
-            android:id="@+id/startButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:backgroundTint="#212121"
-            android:text="@string/live_start"
-            android:textColor="#FFFFFF" />
-
-        <Button
-            android:id="@+id/stopButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/stop" />
-
-        <TextView
-            android:id="@+id/statusText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:textColor="#1565C0" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="@string/live_howto"
-            android:textSize="14sp" />
     </LinearLayout>
 </ScrollView>
