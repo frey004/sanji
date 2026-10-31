@@ -66,8 +66,13 @@ class TranslatorService : Service() {
         private const val CHANNEL_ID = "traductor"
         private const val NOTIFICATION_ID = 1
         private const val LIVE_INTERVAL_MS = 1500L
-        /** En el juego se lee sin ocultar nada, así que se puede mirar más a menudo. */
-        private const val GAME_INTERVAL_MS = 600L
+        /**
+         * En el juego se lee sin ocultar nada, así que en cuanto termina una
+         * lectura empieza la siguiente (solo una pausa mínima).
+         */
+        private const val GAME_INTERVAL_MS = 120L
+        /** Ancho al que se reduce la captura del juego antes de leerla (su texto es grande). */
+        private const val GAME_READ_WIDTH = 720
 
         @Volatile
         var isRunning = false
@@ -322,6 +327,8 @@ class TranslatorService : Service() {
             return
         }
         show(found)
+        // En el juego, la siguiente lectura automática parte de cómo ha quedado la pantalla.
+        if (gameMode) rebaseline = true
     }
 
     /**
@@ -334,37 +341,42 @@ class TranslatorService : Service() {
         val currentReader = reader ?: return
         val bitmap = withContext(Dispatchers.Default) { latestBitmap() } ?: return
         val read = try {
-            currentReader.read(bitmap)
+            currentReader.read(bitmap, GAME_READ_WIDTH)
         } finally {
             bitmap.recycle()
         }
-        val ours = (overlay?.coveredRects() ?: emptyList()) + listOfNotNull(bubbleRect())
-        val visible = read.filter { (box, text) -> keep(text) && ours.none { mostlyInside(box, it) } }
+        val visible = visibleOnly(read)
         val signature = visible.joinToString("\u0000") { it.second }
         if (rebaseline) {
             rebaseline = false
             lastSignature = signature
-            pendingSignature = null
             return
         }
-        if (signature == lastSignature) {
-            pendingSignature = null
-            return
-        }
-        if (signature != pendingSignature) {
-            // Los diálogos aparecen letra a letra: se espera a que el texto
-            // deje de cambiar para no traducir frases a medias.
-            pendingSignature = signature
-            return
-        }
-        pendingSignature = null
+        // Se traduce en cuanto aparece texto nuevo; si el diálogo aún se está
+        // escribiendo, la traducción se actualiza en las siguientes lecturas.
+        if (signature == lastSignature) return
         lastSignature = signature
-        val found = if (overlay?.coversOriginal() == true) readClean(currentReader) else visible
-        if (found.isEmpty()) {
+        if (overlay?.coversOriginal() == true) {
+            // Hay traducciones tapando texto del juego: se mira debajo (un instante).
+            val found = readClean(currentReader)
+            if (found.isEmpty()) overlay?.blocks = emptyList() else show(found)
+            // Lo que quede tapado cambia lo que se ve: la próxima lectura es la referencia.
+            rebaseline = true
+            return
+        }
+        if (visible.isEmpty()) {
             overlay?.blocks = emptyList()
             return
         }
-        show(found)
+        show(visible)
+        // Lo que se ve tras mostrar la traducción: el texto del juego que no ha quedado tapado.
+        lastSignature = visibleOnly(visible).joinToString("\u0000") { it.second }
+    }
+
+    /** El texto del juego que no está bajo nuestras traducciones ni bajo la burbuja. */
+    private fun visibleOnly(read: List<Pair<Rect, String>>): List<Pair<Rect, String>> {
+        val ours = (overlay?.coveredRects() ?: emptyList()) + listOfNotNull(bubbleRect())
+        return read.filter { (box, text) -> keep(text) && ours.none { mostlyInside(box, it) } }
     }
 
     private suspend fun show(found: List<Pair<Rect, String>>) {
@@ -375,8 +387,6 @@ class TranslatorService : Service() {
             val box = found[i].first
             TranslatedBlock(box, translated[i], gameMode && UmaMusume.isDialogue(box, screenWidth, screenHeight))
         }
-        // La pantalla ha cambiado por nuestra culpa: la próxima lectura la toma como punto de partida.
-        rebaseline = true
     }
 
     private fun bubbleRect(): Rect? {

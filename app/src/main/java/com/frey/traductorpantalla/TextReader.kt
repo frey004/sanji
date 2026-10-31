@@ -17,7 +17,23 @@ class TextReader(source: Language) : Closeable {
     private val korean = if (source == Languages.AUTO) Languages.recognizer(Languages.KOREAN) else null
 
     /** Bloques de texto con su posición; las líneas de cada bloque van unidas. */
-    suspend fun read(bitmap: Bitmap): List<Pair<Rect, String>> {
+    suspend fun read(bitmap: Bitmap, maxWidth: Int = Int.MAX_VALUE): List<Pair<Rect, String>> {
+        // Leer una imagen más pequeña es mucho más rápido; las posiciones se
+        // devuelven en la escala original.
+        val scale = if (bitmap.width > maxWidth) maxWidth.toFloat() / bitmap.width else 1f
+        val source = if (scale < 1f) {
+            Bitmap.createScaledBitmap(bitmap, maxWidth, (bitmap.height * scale).toInt(), true)
+        } else {
+            bitmap
+        }
+        try {
+            return readScaled(source, scale)
+        } finally {
+            if (source !== bitmap) source.recycle()
+        }
+    }
+
+    private suspend fun readScaled(bitmap: Bitmap, scale: Float): List<Pair<Rect, String>> {
         val image = InputImage.fromBitmap(bitmap, 0)
         var result = primary.process(image).await()
         if (korean != null && result.text.none { isKana(it) }) {
@@ -25,7 +41,12 @@ class TextReader(source: Language) : Closeable {
             if (other.text.count { isHangul(it) } > result.text.count { isHan(it) }) result = other
         }
         return result.textBlocks.mapNotNull { block ->
-            val box = block.boundingBox ?: return@mapNotNull null
+            val box = block.boundingBox?.let {
+                if (scale == 1f) it else Rect(
+                    (it.left / scale).toInt(), (it.top / scale).toInt(),
+                    (it.right / scale).toInt(), (it.bottom / scale).toInt(),
+                )
+            } ?: return@mapNotNull null
             val lines = block.lines.map { it.text.trim() }
             // El japonés y el chino no separan las palabras con espacios.
             val separator = if (lines.any { line -> line.any { isKana(it) || isHan(it) } }) "" else " "
