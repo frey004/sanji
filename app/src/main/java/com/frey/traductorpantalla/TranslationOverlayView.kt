@@ -43,6 +43,7 @@ class TranslationOverlayView(context: Context) : View(context) {
     var blocks: List<TranslatedBlock> = emptyList()
         set(value) {
             field = value
+            placements = place(value)
             invalidate()
         }
 
@@ -58,6 +59,8 @@ class TranslationOverlayView(context: Context) : View(context) {
             } else {
                 textPaint.clearShadowLayer()
             }
+            // Los textos se vuelven a maquetar con los colores nuevos.
+            placements = place(blocks)
             invalidate()
         }
 
@@ -65,31 +68,62 @@ class TranslationOverlayView(context: Context) : View(context) {
         style = OverlayStyle.DARK
     }
 
+    /** Un recuadro ya colocado (en coordenadas de pantalla) con su texto. */
+    private class Placement(val rect: RectF, val layout: StaticLayout, val pad: Float, val radius: Float)
+
+    private var placements: List<Placement> = emptyList()
+
+    /**
+     * Zonas de la pantalla tapadas por las traducciones. Al leer la pantalla
+     * sin ocultarlas, lo que haya ahí es texto nuestro y se ignora.
+     */
+    fun coveredRects(): List<Rect> = placements.map { p ->
+        Rect(p.rect.left.toInt(), p.rect.top.toInt(), p.rect.right.toInt(), p.rect.bottom.toInt())
+    }
+
+    /** true si alguna traducción tapa el texto original (no es un subtítulo encima). */
+    fun coversOriginal() = blocks.isNotEmpty() && placements.zip(blocks).any { (p, b) ->
+        RectF(b.bounds).let { RectF.intersects(it, p.rect) }
+    }
+
+    private fun place(blocks: List<TranslatedBlock>): List<Placement> = blocks.map { block ->
+        val pad = (if (block.isDialogue) 8 else 4) * density
+        val width = (block.bounds.width() + 2 * pad).toInt().coerceAtLeast(1)
+        if (block.isDialogue) {
+            // El diálogo va como subtítulo justo encima de su cuadro, sin tapar
+            // el japonés: así se puede leer la pantalla sin ocultar nada.
+            val layout = fitText(block.text, width - (2 * pad).toInt(), Int.MAX_VALUE, 20 * scaledDensity)
+            val height = layout.height + 2 * pad
+            val bottom = block.bounds.top - 10 * density
+            if (bottom - height > 24 * density) {
+                return@map Placement(
+                    RectF(block.bounds.left - pad, bottom - height, block.bounds.left - pad + width, bottom),
+                    layout, pad, 12 * density,
+                )
+            }
+        }
+        val maxSize = (if (block.isDialogue) 22 else 28) * scaledDensity
+        val layout = fitText(block.text, width - (2 * pad).toInt(), block.bounds.height(), maxSize)
+        val height = maxOf(block.bounds.height().toFloat(), layout.height.toFloat()) + 2 * pad
+        Placement(
+            RectF(block.bounds.left - pad, block.bounds.top - pad, block.bounds.left - pad + width, block.bounds.top - pad + height),
+            layout, pad, (if (block.isDialogue) 12 else 6) * density,
+        )
+    }
+
     override fun onDraw(canvas: Canvas) {
-        if (blocks.isEmpty()) return
+        if (placements.isEmpty()) return
         // Las coordenadas del OCR son de pantalla completa; compensamos si la
         // ventana no empieza en (0, 0) (barra de estado, recortes de cámara…).
         getLocationOnScreen(location)
         canvas.save()
         canvas.translate(-location[0].toFloat(), -location[1].toFloat())
-        for (block in blocks) {
-            val pad = (if (block.isDialogue) 8 else 4) * density
-            val width = (block.bounds.width() + 2 * pad).toInt().coerceAtLeast(1)
-            val maxSize = (if (block.isDialogue) 22 else 28) * scaledDensity
-            val layout = fitText(block.text, width - (2 * pad).toInt(), block.bounds.height(), maxSize)
-            val height = maxOf(block.bounds.height().toFloat(), layout.height.toFloat()) + 2 * pad
-            val rect = RectF(
-                block.bounds.left - pad,
-                block.bounds.top - pad,
-                block.bounds.left - pad + width,
-                block.bounds.top - pad + height,
-            )
-            val radius = (if (block.isDialogue) 12 else 6) * density
-            canvas.drawRoundRect(rect, radius, radius, background)
-            if (style.border != null) canvas.drawRoundRect(rect, radius, radius, borderPaint)
+        for (p in placements) {
+            canvas.drawRoundRect(p.rect, p.radius, p.radius, background)
+            if (style.border != null) canvas.drawRoundRect(p.rect, p.radius, p.radius, borderPaint)
             canvas.save()
-            canvas.translate(rect.left + pad, rect.top + pad)
-            layout.draw(canvas)
+            canvas.translate(p.rect.left + p.pad, p.rect.top + p.pad)
+            p.layout.draw(canvas)
             canvas.restore()
         }
         canvas.restore()
@@ -100,8 +134,9 @@ class TranslationOverlayView(context: Context) : View(context) {
         val minSize = 9 * scaledDensity
         var size = minOf(height.toFloat(), maxSize).coerceAtLeast(minSize)
         while (true) {
-            textPaint.textSize = size
-            val layout = StaticLayout.Builder.obtain(text, 0, text.length, textPaint, width.coerceAtLeast(1))
+            // Cada recuadro con su propia copia: el tamaño de letra no se puede compartir.
+            val paint = TextPaint(textPaint).apply { textSize = size }
+            val layout = StaticLayout.Builder.obtain(text, 0, text.length, paint, width.coerceAtLeast(1))
                 .setAlignment(Layout.Alignment.ALIGN_NORMAL)
                 .setLineSpacing(0f, 1f)
                 .setIncludePad(false)

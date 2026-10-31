@@ -12,6 +12,7 @@ import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.graphics.drawable.GradientDrawable
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
@@ -45,6 +46,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -64,7 +66,8 @@ class TranslatorService : Service() {
         private const val CHANNEL_ID = "traductor"
         private const val NOTIFICATION_ID = 1
         private const val LIVE_INTERVAL_MS = 1500L
-        private const val GAME_INTERVAL_MS = 1000L
+        /** En el juego se lee sin ocultar nada, así que se puede mirar más a menudo. */
+        private const val GAME_INTERVAL_MS = 600L
 
         @Volatile
         var isRunning = false
@@ -102,6 +105,8 @@ class TranslatorService : Service() {
     private var lastSignature = ""
     /** Texto visto en la última pasada en tiempo real que aún no se ha confirmado. */
     private var pendingSignature: String? = null
+    /** Tras mostrar una traducción, la siguiente lectura solo toma nota de cómo queda la pantalla. */
+    private var rebaseline = false
     /** Número de fotogramas cuando la pantalla quedó quieta tras mostrar la traducción. */
     private var settledFrame = -1
 
@@ -261,7 +266,10 @@ class TranslatorService : Service() {
     private suspend fun captureCleanScreen(): Bitmap? {
         overlay?.visibility = View.INVISIBLE
         bubble?.visibility = View.INVISIBLE
-        delay(220)
+        // Basta con un par de fotogramas sin nuestras ventanas (~30 ms): así el
+        // parpadeo apenas se nota. Si la pantalla está quieta, como mucho 250 ms.
+        val start = frameCount.get()
+        withTimeoutOrNull(250) { while (frameCount.get() < start + 2) delay(8) }
         val bitmap = withContext(Dispatchers.Default) { latestBitmap() }
         bubble?.visibility = View.VISIBLE
         overlay?.visibility = View.VISIBLE
@@ -273,52 +281,115 @@ class TranslatorService : Service() {
     private fun translateScreen(fromLive: Boolean) {
         if (busy) return
         busy = true
-        setBubbleBusy(true)
+        // En tiempo real la burbuja no cambia: solo se atenúa al tocarla.
+        if (!fromLive) setBubbleBusy(true)
         scope.launch {
             try {
-                val bitmap = captureCleanScreen() ?: return@launch
-                val currentReader = reader ?: return@launch
-                val currentTranslator = translator ?: return@launch
-                val read = currentReader.read(bitmap)
-                bitmap.recycle()
-
-                val found = read.filter { (_, text) ->
-                    if (gameMode) UmaMusume.isGameText(text) else text.count { it.isLetter() } >= 2
-                }
-                val signature = found.joinToString("\u0000") { it.second }
-                if (fromLive && signature == lastSignature) {
-                    pendingSignature = null
-                    return@launch
-                }
-                if (fromLive && gameMode && signature != pendingSignature) {
-                    // Los diálogos aparecen letra a letra: esperamos a que el
-                    // texto deje de cambiar para no traducir frases a medias.
-                    pendingSignature = signature
-                    return@launch
-                }
-                pendingSignature = null
-                lastSignature = signature
-
-                if (found.isEmpty()) {
-                    overlay?.blocks = emptyList()
-                    if (!fromLive) Toast.makeText(this@TranslatorService, "No se encontró texto", Toast.LENGTH_SHORT).show()
-                    return@launch
-                }
-                val translated = currentTranslator.translateAll(found.map { it.second })
-                // Lo que ya estaba en tu idioma no se tapa.
-                overlay?.blocks = found.indices.filter { translated[it] != found[it].second }.map { i ->
-                    val box = found[i].first
-                    TranslatedBlock(box, translated[i], gameMode && UmaMusume.isDialogue(box, screenWidth, screenHeight))
-                }
+                if (gameMode && fromLive) gamePass() else fullPass(fromLive)
             } catch (e: Exception) {
                 lastSignature = ""
                 Toast.makeText(this@TranslatorService, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             } finally {
                 busy = false
-                setBubbleBusy(false)
+                if (!fromLive) setBubbleBusy(false)
                 markSettledLater()
             }
         }
+    }
+
+    private fun keep(text: String) = if (gameMode) UmaMusume.isGameText(text) else text.count { it.isLetter() } >= 2
+
+    /** Oculta un instante nuestras ventanas y lee todo el texto de la pantalla. */
+    private suspend fun readClean(reader: TextReader): List<Pair<Rect, String>> {
+        val bitmap = captureCleanScreen() ?: return emptyList()
+        return try {
+            reader.read(bitmap).filter { keep(it.second) }
+        } finally {
+            bitmap.recycle()
+        }
+    }
+
+    /** Lectura normal: oculta un instante nuestras ventanas y traduce lo que haya. */
+    private suspend fun fullPass(fromLive: Boolean) {
+        val currentReader = reader ?: return
+        val found = readClean(currentReader)
+        val signature = found.joinToString("\u0000") { it.second }
+        if (fromLive && signature == lastSignature) return
+        lastSignature = signature
+        if (found.isEmpty()) {
+            overlay?.blocks = emptyList()
+            if (!fromLive) Toast.makeText(this, "No se encontró texto", Toast.LENGTH_SHORT).show()
+            return
+        }
+        show(found)
+    }
+
+    /**
+     * Uma Musume en tiempo real: lee la pantalla tal cual, sin ocultar nada (el
+     * diálogo traducido va encima de su cuadro y no tapa el japonés) e ignora lo
+     * que hay bajo nuestras traducciones. Solo si una traducción tapa texto del
+     * juego se oculta un instante para leer debajo.
+     */
+    private suspend fun gamePass() {
+        val currentReader = reader ?: return
+        val bitmap = withContext(Dispatchers.Default) { latestBitmap() } ?: return
+        val read = try {
+            currentReader.read(bitmap)
+        } finally {
+            bitmap.recycle()
+        }
+        val ours = (overlay?.coveredRects() ?: emptyList()) + listOfNotNull(bubbleRect())
+        val visible = read.filter { (box, text) -> keep(text) && ours.none { mostlyInside(box, it) } }
+        val signature = visible.joinToString("\u0000") { it.second }
+        if (rebaseline) {
+            rebaseline = false
+            lastSignature = signature
+            pendingSignature = null
+            return
+        }
+        if (signature == lastSignature) {
+            pendingSignature = null
+            return
+        }
+        if (signature != pendingSignature) {
+            // Los diálogos aparecen letra a letra: se espera a que el texto
+            // deje de cambiar para no traducir frases a medias.
+            pendingSignature = signature
+            return
+        }
+        pendingSignature = null
+        lastSignature = signature
+        val found = if (overlay?.coversOriginal() == true) readClean(currentReader) else visible
+        if (found.isEmpty()) {
+            overlay?.blocks = emptyList()
+            return
+        }
+        show(found)
+    }
+
+    private suspend fun show(found: List<Pair<Rect, String>>) {
+        val currentTranslator = translator ?: return
+        val translated = currentTranslator.translateAll(found.map { it.second })
+        // Lo que ya estaba en tu idioma no se tapa.
+        overlay?.blocks = found.indices.filter { translated[it] != found[it].second }.map { i ->
+            val box = found[i].first
+            TranslatedBlock(box, translated[i], gameMode && UmaMusume.isDialogue(box, screenWidth, screenHeight))
+        }
+        // La pantalla ha cambiado por nuestra culpa: la próxima lectura la toma como punto de partida.
+        rebaseline = true
+    }
+
+    private fun bubbleRect(): Rect? {
+        val params = bubbleParams ?: return null
+        val view = bubble ?: return null
+        return Rect(params.x, params.y, params.x + view.width, params.y + view.height)
+    }
+
+    /** true si más de la mitad de [box] queda dentro de [area]. */
+    private fun mostlyInside(box: Rect, area: Rect): Boolean {
+        val overlap = Rect()
+        if (!overlap.setIntersect(box, area)) return false
+        return overlap.width().toLong() * overlap.height() * 2 > box.width().toLong() * box.height()
     }
 
     /** Recuerda el contador de fotogramas cuando la pantalla deja de cambiar por nuestra culpa. */
