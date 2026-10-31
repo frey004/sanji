@@ -75,7 +75,7 @@ class GlossaryActivity : ComponentActivity() {
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(0, (6 * density).toInt(), 0, (6 * density).toInt())
             }
-            val text = TextView(this).apply {
+            val label = TextView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                 textSize = 15f
                 setTextColor(getColor(R.color.text))
@@ -102,7 +102,7 @@ class GlossaryActivity : ComponentActivity() {
                         .show()
                 }
             }
-            row.addView(text)
+            row.addView(label)
             row.addView(delete)
             list.addView(row)
         }
