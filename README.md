@@ -17,6 +17,12 @@ manga, la opción por defecto es **Detectar automáticamente**: la app averigua 
 idioma de cada texto (sin conexión, con ML Kit) y deja como está lo que ya está
 en tu idioma. Directos detecta japonés, chino, coreano o inglés.
 
+**Personajes y nombres** (en Ajustes, en la pantalla de inicio): apunta cada
+personaje con las formas en que aparece su nombre («Rain, レイン») y su género.
+Al traducir, su nombre no se traduce («Rain» no pasa a ser «la lluvia») y las
+frases que se refieren a él concuerdan en género («eres estúpida, Rain» si es
+mujer). Vale para todos los modos.
+
 **Traducción en línea:** el interruptor de la pantalla de inicio (activado por
 defecto) traduce con Google Translate por internet, que lo hace mucho mejor;
 sin conexión se usa la traducción del móvil (ML Kit).

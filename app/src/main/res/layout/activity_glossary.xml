@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <include layout="@layout/view_header" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="-40dp"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="24dp">
+
+            <!-- Añadir un personaje. -->
+            <LinearLayout style="@style/Sanji.Card">
+
+                <TextView
+                    style="@style/Sanji.CardTitle"
+                    android:text="@string/glossary_add_title" />
+
+                <TextView
+                    style="@style/Sanji.Label"
+                    android:text="@string/glossary_aliases_label" />
+
+                <EditText
+                    android:id="@+id/aliasesInput"
+                    style="@style/Sanji.Field"
+                    android:hint="@string/glossary_aliases_hint"
+                    android:importantForAutofill="no"
+                    android:inputType="textCapWords"
+                    android:singleLine="true" />
+
+                <TextView
+                    style="@style/Sanji.Label"
+                    android:text="@string/glossary_display_label" />
+
+                <EditText
+                    android:id="@+id/displayInput"
+                    style="@style/Sanji.Field"
+                    android:hint="@string/glossary_display_hint"
+                    android:importantForAutofill="no"
+                    android:inputType="textCapWords"
+                    android:singleLine="true" />
+
+                <TextView
+                    style="@style/Sanji.Label"
+                    android:text="@string/glossary_gender_label" />
+
+                <RadioGroup
+                    android:id="@+id/genderGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checkedButton="@+id/genderUnspecified"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/genderMale"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/glossary_male"
+                        android:textColor="@color/text" />
+
+                    <RadioButton
+                        android:id="@+id/genderFemale"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/glossary_female"
+                        android:textColor="@color/text" />
+
+                    <RadioButton
+                        android:id="@+id/genderUnspecified"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/glossary_unspecified"
+                        android:textColor="@color/text" />
+                </RadioGroup>
+
+                <Button
+                    android:id="@+id/addButton"
+                    style="@style/Sanji.Button.Primary"
+                    android:text="@string/glossary_add" />
+            </LinearLayout>
+
+            <!-- Personajes guardados. -->
+            <LinearLayout style="@style/Sanji.Card">
+
+                <TextView
+                    style="@style/Sanji.CardTitle"
+                    android:text="@string/glossary_list_title" />
+
+                <LinearLayout
+                    android:id="@+id/characterList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="vertical" />
+
+                <TextView
+                    android:id="@+id/emptyText"
+                    style="@style/Sanji.Hint"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/glossary_empty" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/Sanji.Card">
+
+                <TextView
+                    style="@style/Sanji.CardTitle"
+                    android:text="@string/howto_title" />
+
+                <TextView
+                    style="@style/Sanji.Hint"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/glossary_howto"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

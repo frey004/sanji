@@ -63,4 +63,20 @@
     <string name="screen_subtitle">Traduce el texto de cualquier app o juego encima de la pantalla</string>
     <string name="uma_subtitle">Diálogos, opciones y menús del juego, en tu idioma</string>
     <string name="live_subtitle">Subtítulos traducidos de lo que se dice</string>
+    <string name="glossary_title">Personajes y nombres</string>
+    <string name="glossary_subtitle">Que se respeten sus nombres y su género</string>
+    <string name="glossary_add_title">Añadir personaje</string>
+    <string name="glossary_aliases_label">Cómo aparece su nombre (separa varias formas con comas)</string>
+    <string name="glossary_aliases_hint">Rain, レイン</string>
+    <string name="glossary_display_label">Cómo escribirlo en la traducción (opcional)</string>
+    <string name="glossary_display_hint">Rain</string>
+    <string name="glossary_gender_label">Género</string>
+    <string name="glossary_male">Hombre</string>
+    <string name="glossary_female">Mujer</string>
+    <string name="glossary_unspecified">Sin indicar</string>
+    <string name="glossary_add">Añadir</string>
+    <string name="glossary_list_title">Personajes guardados</string>
+    <string name="glossary_empty">Todavía no hay ninguno.</string>
+    <string name="glossary_open">Personajes y nombres</string>
+    <string name="glossary_howto">• El nombre nunca se traduce: «you are stupid rain» queda como «eres estúpido, Rain» y no «la lluvia».\n• Con el género, las frases que se refieren al personaje concuerdan: «estúpida» si es mujer, «estúpido» si es hombre.\n• Pon todas las formas en que aparece el nombre (inglés, japonés…), separadas por comas.\n• Sirve para todos los modos: pantalla, Uma Musume, webs, manga y directos.\n\nEl tono depende del traductor (Google); con la lista, al menos no se pierden los nombres ni se cambia el género.</string>
 </resources>

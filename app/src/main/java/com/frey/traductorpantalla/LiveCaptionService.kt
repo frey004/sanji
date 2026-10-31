@@ -302,10 +302,13 @@ class LiveCaptionService : Service() {
     /** En línea si está activado (traduce mejor); si falla, con el modelo sin conexión. */
     private fun translate(text: String, code: String) = scope.async {
         val translator = translators[code] ?: return@async text
+        // Respeta los nombres y el género de la lista de personajes.
+        val protected = Glossary.protect(text)
         if (onlineTranslation) {
-            OnlineTranslator.translate(text, code, Languages.target(this@LiveCaptionService).code)?.let { return@async it }
+            OnlineTranslator.translate(protected.text, code, Languages.target(this@LiveCaptionService).code)
+                ?.let { return@async protected.restore(it) }
         }
-        runCatching { translator.translate(text).await() }.getOrDefault(text)
+        runCatching { protected.restore(translator.translate(protected.text).await()) }.getOrDefault(text)
     }
 
     /** En automático, indica arriba del recuadro qué idioma se está oyendo. */

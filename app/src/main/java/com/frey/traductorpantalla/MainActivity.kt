@@ -41,6 +41,10 @@ class MainActivity : ComponentActivity() {
         // Esquinas redondeadas según el fondo del icono.
         findViewById<ImageView>(R.id.umaIcon).clipToOutline = true
 
+        findViewById<Button>(R.id.glossaryButton).setOnClickListener {
+            startActivity(Intent(this, GlossaryActivity::class.java))
+        }
+
         val online = findViewById<Switch>(R.id.onlineSwitch)
         online.isChecked = Languages.onlineTranslation(this)
         online.setOnCheckedChangeListener { _, checked -> Languages.saveOnlineTranslation(this, checked) }

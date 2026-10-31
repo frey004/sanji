@@ -276,6 +276,12 @@
                     style="@style/Sanji.Hint"
                     android:layout_marginTop="4dp"
                     android:text="@string/online_hint" />
+
+                <Button
+                    android:id="@+id/glossaryButton"
+                    style="@style/Sanji.Button.Outline"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/glossary_open" />
             </LinearLayout>
 
             <LinearLayout style="@style/Sanji.Card">

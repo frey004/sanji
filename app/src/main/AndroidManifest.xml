@@ -16,6 +16,7 @@
     </queries>
 
     <application
+        android:name=".SanjiApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -41,6 +42,12 @@
             android:name=".LiveActivity"
             android:exported="false"
             android:label="@string/tile_live_title" />
+
+        <activity
+            android:name=".GlossaryActivity"
+            android:exported="false"
+            android:label="@string/glossary_title"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".ScreenActivity"

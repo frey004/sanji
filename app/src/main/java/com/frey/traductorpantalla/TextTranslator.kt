@@ -75,15 +75,21 @@ class TextTranslator(
 
     private suspend fun translateGroup(texts: List<String>, code: String?): List<String> {
         val key = code ?: "auto"
-        val out = texts.map { cache.get("$key\u0000$it") }.toMutableList()
+        // Si cambia la lista de personajes, las traducciones guardadas ya no valen.
+        val cacheKey = { text: String -> "$key\u0000${Glossary.version}\u0000$text" }
+        val out = texts.map { cache.get(cacheKey(it)) }.toMutableList()
         val missing = texts.indices.filter { out[it] == null }
         if (missing.isNotEmpty()) {
-            val pending = missing.map { texts[it] }
-            val translated = (if (Languages.onlineTranslation(context)) OnlineTranslator.translateAll(pending, key, target.code) else null)
+            // Los nombres de la lista de personajes viajan como «cebos» que el
+            // traductor no toca y que marcan el género; luego se restauran.
+            val protected = missing.map { Glossary.protect(texts[it]) }
+            val pending = protected.map { it.text }
+            val raw = (if (Languages.onlineTranslation(context)) OnlineTranslator.translateAll(pending, key, target.code) else null)
                 ?: translateOffline(pending, code)
             missing.forEachIndexed { k, i ->
-                out[i] = translated[k]
-                cache.put("$key\u0000${texts[i]}", translated[k])
+                val translated = protected[k].restore(raw[k])
+                out[i] = translated
+                cache.put(cacheKey(texts[i]), translated)
             }
         }
         return out.map { it ?: "" }
